@@ -1,35 +1,64 @@
 const screenW = 1500;
 const screenH =  840;
 
-let date = new Date();
+let FR = 300;
+let carSize = 100;
+let carSizeW = 100;
+let carSizeH = 50;
+let posX = screenW/2;
+let posY = screenH/2;
 
-FR = 10;
+let rotation = 0;
+let rotationSpeed = 5;
+let translationSpeed = 10;
+
+let K_friction = 0.4;
+let F_app = 0;
+
 
 function setup() {
     createCanvas(screenW, screenH);
-    background('Green');
     frameRate(FR);
+
+    angleMode(DEGREES);
+    rectMode(CENTER);
 }
-async function delay(delayInms) {
-    return new Promise(resolve  => {
-        setTimeout(() => {
-        resolve(2);
-        }, delayInms);
-    });
-}
-// async function sample() {
-//     console.log('a');
-//     console.log('waiting...')
-//     let delayres = await delay(3000);
-//     console.log('b');
-// }
+
 function draw() {
-    circle(30,30,30);
-    // background('Green');
-    var startTime = date.getTime();
-    while (date.getTime() - startTime < 1000){
-        console.log(startTime);
-    }
     clear();
-    background('Green');
+    checkKeys();
+    renderCar();
+}
+
+function renderCar(){
+    translate(posX, posY);
+    rotate(rotation);
+    fill('green');
+    rect(0, 0, carSizeW, carSizeH);
+    
+    fill('red');
+    circle(carSizeW*(49/100), carSizeH/4,7,7);
+    circle(carSizeW*(49/100), -carSizeH/4,7,7);
+
+    fill('white');
+    circle(-carSizeW*(49/100), carSizeH/4,13);
+    circle(-carSizeW*(49/100), -carSizeH/4,13);
+}
+
+function checkKeys(){
+    if (keyIsDown(LEFT_ARROW)) {
+        rotation -= 2*rotationSpeed;
+    }
+    if (keyIsDown(RIGHT_ARROW)) {
+        rotation += 2*rotationSpeed;
+    }
+    if (keyIsDown(UP_ARROW)) {
+        posX -= translationSpeed * cos(rotation);
+        posY -= translationSpeed * sin(rotation);
+        console.log(rotation, posX, posY);
+    }
+    if (keyIsDown(DOWN_ARROW)) {
+        posX += translationSpeed * cos(rotation);
+        posY += translationSpeed * sin(rotation);
+    }
 }
