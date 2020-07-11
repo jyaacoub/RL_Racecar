@@ -4,7 +4,7 @@ const screenH =  840;
 let FR = 100;
 let delta_t = 1/FR;
 
-let carSize = 600;
+let carSize = 50;
 let carSizeW = carSize;
 let carSizeH = carSize/2;
 
@@ -84,10 +84,10 @@ function renderCar(){
     translate(pos_x, pos_y);
     rotate(rotation);
     fill('green');
-    rect(0, 0, carSizeW, carSizeH, 20);
+    rect(0, 0, carSizeW, carSizeH, 10);
 
     fill(0,200,0);
-    rect(0,0, 3*carSizeW/5, 7*carSizeH/10, 20);
+    rect(0,0, 3*carSizeW/5, 7*carSizeH/10, 10);
     
     fill('red');
     circle(carSizeW*(46/100), carSizeH/4, carSize/13);
@@ -97,8 +97,23 @@ function renderCar(){
     circle(-carSizeW*(44/100), carSizeH/4, carSize/10);
     circle(-carSizeW*(44/100), -carSizeH/4, carSize/10);
 
-    // stroke(255);
-    // line(0,0,10,100);
+    stroke('black');
+    strokeWeight(0.01*carSize);
+    line(0,carSizeH/2, 0, carSize*2);
+    line(0,-carSizeH/2, 0, -carSize*2);
+
+    line(-carSizeW/2, 0, -carSize*2, 0);
+    line(carSizeW/2, 0, carSize*2, 0);
+
+    line(carSizeW/2, carSizeH/2, 
+        carSize + carSizeW/2, carSize + carSizeH/2);
+    line(carSizeW/2, -carSizeH/2, 
+        carSize + carSizeW/2, -carSize - carSizeH/2);
+
+    line(-carSizeW/2, -carSizeH/2, 
+        -carSize -carSizeW/2, -carSize - carSizeH/2);
+    line(-carSizeW/2, carSizeH/2, 
+        -carSize -carSizeW/2, carSize + carSizeH/2);
 }
 
 function checkKeys(){
