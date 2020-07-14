@@ -8,8 +8,9 @@ let size = 50;
 let gravity = 9.8;
 let K_friction = 0.1;
 
-let raceCar = new RaceCar();
-let raceCar2 = new RaceCar();
+let raceCar = new RaceCar(0, screenH-75, 40);
+let raceCar2 = new RaceCar(0, screenH-125, 40);
+let track = new Track(screenH, screenW);
 
 function setup() {
     createCanvas(screenW, screenH);
@@ -18,9 +19,8 @@ function setup() {
     angleMode(DEGREES);
     rectMode(CENTER);
 
-    raceCar2.pos_y -=100;
     raceCar2.carBody = 'blue';
-}
+    }
 
 function draw() {
     clear();
@@ -32,13 +32,15 @@ function draw() {
     raceCar.display();
 
     pop();
+    push();
     checkKeys2(raceCar2);
     raceCar2.applyForces();
     raceCar2.display();
 }
 
 function renderBackground(){
-    background('grey');
+    background(0,40,0);
+    track.display();
 }
 
 function checkKeys1(car){
