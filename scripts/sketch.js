@@ -26,7 +26,7 @@ function draw() {
     clear();
     renderBackground();
 
-    checkBounds(raceCar);
+    collisionDetection(raceCar); // collision detection
 
     push();
     checkKeys1(raceCar);
@@ -60,7 +60,7 @@ function renderBackground(){
     track.display();
 }
 
-function checkBounds(car){
+function collisionDetection(car){
     let onTrack = track.onTrack(car);
     
     if (!onTrack){
