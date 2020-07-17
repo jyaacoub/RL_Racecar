@@ -26,10 +26,16 @@ function draw() {
     clear();
     renderBackground();
 
+    checkBounds(raceCar);
+
     push();
     checkKeys1(raceCar);
     raceCar.applyForces();
     raceCar.display();
+
+    pop();
+    push();
+    displayBounds(raceCar);
 
     pop();
     push();
@@ -38,16 +44,28 @@ function draw() {
     raceCar2.display();
 }
 
+function displayBounds(car){
+    stroke('red');
+    let [l,r,t,b] = car.borders;
+    strokeWeight(2);
+    
+    line(l,b,l,t);
+    line(r,b,r,t);
+    line(l,b,r,b);
+    line(l,t,r,t);
+}
+
 function renderBackground(){
     background(0,40,0);
     track.display();
 }
 
-function checkCollision(car, track){
-    // Checks to see if the car is still on the track
-    let onTrack = true;
-
-
+function checkBounds(car){
+    let onTrack = track.onTrack(car);
+    
+    if (!onTrack){
+        car.resetPos();
+    }
 }
 
 function checkKeys1(car){

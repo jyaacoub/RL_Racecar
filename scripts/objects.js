@@ -6,6 +6,7 @@ class RaceCar {
 
         this.pos_x = pos_x || 750; // Chosen to be the center of the screen
         this.pos_y = pos_y || 420;
+        this.original_pos = [this.pos_x, this.pos_y];
 
         this.rotationSpeed = rotationSpeed || 2;
 
@@ -110,6 +111,33 @@ class RaceCar {
             this.F_appE_y = this.F_appE * sin(this.rotation);
         }
     }
+    resetPos(){
+        this.rotation = 0;
+
+        // Position reset
+        this.pos_x = this.original_pos[0];
+        this.pos_y = this.original_pos[1];
+        
+        // Speed
+        this.speed_x = 0;
+        this.speed_y = 0;
+        
+        // Forces
+        this.F_appE_x = 0;
+        this.F_appE_y = 0;
+    }
+    get borders(){
+        // creating a square border box.
+        let size = this.carSize*0.12;
+
+        let left_x = this.pos_x - size;
+        let right_x = this.pos_x + size;
+
+        let top_y = this.pos_y + size;
+        let bottom_y = this.pos_y - size;
+
+        return [left_x, right_x, top_y, bottom_y]
+    }
 }
 
 class Roads {
@@ -125,13 +153,22 @@ class Roads {
         fill('red');
         rect(this.pos_x, this.pos_y, 10, 10, 10);
     }
+    get borders(){
+        // returns the sides of the road to determine collision
+        let left_x = this.pos_x - this.width/2;
+        let right_x = this.pos_x + this.width/2;
+
+        let top_y = this.pos_y + this.height/2;
+        let bottom_y = this.pos_y - this.height/2;
+
+        return [left_x, right_x, top_y, bottom_y]
+    }
 }
 
 class Road_Straight extends Roads {
     constructor(pos_x, pos_y, width, height, color){
         super(pos_x, pos_y, width, height, color);
     }
-
     display(){
         noStroke();
         fill(this.color);
@@ -145,22 +182,25 @@ class Road_Turn extends Roads {
         super(pos_x, pos_y, width, height, color);
         this.pos_curve = pos_curve || 1;
     }
-
     display(){
         noStroke();
         fill(this.color);
 
         if  (this.pos_curve === 1){
-            rect(this.pos_x, this.pos_y, this.width, this.height, 100, 0, 0, 0);
+            rect(this.pos_x, this.pos_y, this.width, 
+                this.height, 100, 0, 0, 0);
         }
         else if (this.pos_curve === 2){
-            rect(this.pos_x, this.pos_y, this.width, this.height, 0, 100, 0, 0);
+            rect(this.pos_x, this.pos_y, this.width, 
+                this.height, 0, 100, 0, 0);
         }
         else if (this.pos_curve === 3){
-            rect(this.pos_x, this.pos_y, this.width, this.height, 0, 0, 100, 0);
+            rect(this.pos_x, this.pos_y, this.width, 
+                this.height, 0, 0, 100, 0);
         }
         else if (this.pos_curve === 4){
-            rect(this.pos_x, this.pos_y, this.width, this.height, 0, 0, 0, 100);
+            rect(this.pos_x, this.pos_y, this.width, 
+                this.height, 0, 0, 0, 100);
         }
         super.display();
     }
@@ -178,15 +218,29 @@ class Track {
         this.roads.push(new Road_Straight(s_W-100, s_H/2, 100, s_H-300));
 
         // Corners
-        this.roads.push(new Road_Turn(100, 100, 100, 100, 1));
-        this.roads.push(new Road_Turn(s_W-100, 100, 100, 100, 2));
-        this.roads.push(new Road_Turn(100, s_H-100, 100, 100, 4));
-        this.roads.push(new Road_Turn(s_W-100, s_H-100, 100, 100, 3));
+        this.roads.push(new Road_Turn(100, 100, 100, 100, 1,'yellow'));
+        this.roads.push(new Road_Turn(s_W-100, 100, 100, 100, 2,'yellow'));
+        this.roads.push(new Road_Turn(100, s_H-100, 100, 100, 4,'yellow'));
+        this.roads.push(new Road_Turn(s_W-100, s_H-100, 100, 100, 3,'yellow'));
     }
-
     display(){
         this.roads.forEach(road => {
             road.display();
         });
     }
+    onTrack(car){
+        // Checks to see if the car is still on the track
+        let [left_C, right_C, top_C, bottom_C] = car.borders;
+        
+        for(let i = 0; i < this.roads.length; i++){
+            let [left_R, right_R, top_R, bottom_R] = this.roads[i].borders;
+            if (right_C >= left_R && left_C <= right_R &&
+                top_C >= bottom_R && bottom_C <= top_R ){
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 }
