@@ -43,36 +43,45 @@ function renderBackground(){
     track.display();
 }
 
+function checkCollision(car, track){
+    // Checks to see if the car is still on the track
+    let onTrack = true;
+
+
+}
+
 function checkKeys1(car){
+    // Turning
     if (keyIsDown(LEFT_ARROW)) {
-        car.rotation -= car.rotationSpeed;
+        car.move('l');
     }
     if (keyIsDown(RIGHT_ARROW)) {
-        car.rotation += car.rotationSpeed;
+        car.move('r');
     }
+
+    // Moving
     if (keyIsDown(UP_ARROW)) {
-        car.F_appE_x = -car.F_appE * cos(car.rotation);
-        car.F_appE_y = -car.F_appE * sin(car.rotation);
+        car.move('f');
     }
     if (keyIsDown(DOWN_ARROW)) {
-        car.F_appE_x = car.F_appE * cos(car.rotation);
-        car.F_appE_y = car.F_appE * sin(car.rotation);
+        car.move('b');
     }
 }
 
 function checkKeys2(car){
-    if (keyIsDown(65)) {
-        car.rotation -= car.rotationSpeed;
+    // Turning
+    if (keyIsDown(65)) { // 'A'
+        car.move('l');
     }
-    if (keyIsDown(68)) {
-        car.rotation += car.rotationSpeed;
+    if (keyIsDown(68)) { // 'D'
+        car.move('r');
     }
-    if (keyIsDown(87)) {
-        car.F_appE_x = -car.F_appE * cos(car.rotation);
-        car.F_appE_y = -car.F_appE * sin(car.rotation);
+
+    // Moving
+    if (keyIsDown(87)) { // 'W'
+        car.move('f');
     }
-    if (keyIsDown(83)) {
-        car.F_appE_x = car.F_appE * cos(car.rotation);
-        car.F_appE_y = car.F_appE * sin(car.rotation);
+    if (keyIsDown(83)) { // 'S'
+        car.move('b');
     }
 }

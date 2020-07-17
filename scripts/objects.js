@@ -7,7 +7,6 @@ class RaceCar {
         this.pos_x = pos_x || 750; // Chosen to be the center of the screen
         this.pos_y = pos_y || 420;
 
-        this.engine_power = engine_power || 430;
         this.rotationSpeed = rotationSpeed || 2;
 
         this.K_friction = K_friction || 0.1;
@@ -19,7 +18,8 @@ class RaceCar {
 
         this.F_friction = this.K_friction * this.mass * this.gravity;
         
-        this.F_appE = this.engine_power * this.mass;
+        let engine_p = engine_power || 430; 
+        this.F_appE = engine_p * this.mass;
         this.F_appE_x = 0;
         this.F_appE_y = 0;
 
@@ -29,7 +29,6 @@ class RaceCar {
         this.rotation = 0;
         this.carBody = 'green';
     }
-
     display(){
         noStroke();
         translate(this.pos_x, this.pos_y);
@@ -40,7 +39,7 @@ class RaceCar {
         const size = this.carSize;
 
         // Drawing body and shape
-        fill('dark'+this.carBody);
+        fill('dark' + this.carBody);
         rect(0, 0, w, h, 10);
     
         fill(80);
@@ -69,27 +68,47 @@ class RaceCar {
     
         // line(0,0,-size,size);
         // line(0,0,size,-size);
-
     }
     applyForces(){
-
+        // Friction magnitudes
         let F_friction_x = -this.speed_x * this.F_friction;
         let F_friction_y = -this.speed_y * this.F_friction;
     
+        // Calc. net force
         let F_net_x = F_friction_x + this.F_appE_x;
         let F_net_y = F_friction_y + this.F_appE_y;
     
+        // Calc. acceleration by dividing net force by mass
         let accel_x = F_net_x / this.mass;
         let accel_y = F_net_y / this.mass;
     
+        // Delta time is seconds per frame
         this.speed_x += accel_x * this.delta_t;
         this.speed_y += accel_y * this.delta_t;
         
+        // Applying mechanics formula
         this.pos_x += this.speed_x * this.delta_t + 0.5 * accel_x * (this.delta_t**2);
         this.pos_y += this.speed_y * this.delta_t + 0.5 * accel_y * (this.delta_t**2);
-    
+        
+        // Reseting the forces for the next frame
         this.F_appE_x = 0;
         this.F_appE_y = 0;
+    }
+    move(direction){
+        // Turning:
+        if (direction === 'l'){ // Left
+            this.rotation -= this.rotationSpeed;
+        } else if (direction === 'r'){ // Right
+            this.rotation += this.rotationSpeed;
+
+        // Moving:
+        } else if (direction === 'f'){ // Forwards
+            this.F_appE_x = -this.F_appE * cos(this.rotation);
+            this.F_appE_y = -this.F_appE * sin(this.rotation);
+        } else if (direction === 'b'){ // Backwards
+            this.F_appE_x = this.F_appE * cos(this.rotation);
+            this.F_appE_y = this.F_appE * sin(this.rotation);
+        }
     }
 }
 
@@ -108,7 +127,6 @@ class Roads {
     }
 }
 
-
 class Road_Straight extends Roads {
     constructor(pos_x, pos_y, width, height, color){
         super(pos_x, pos_y, width, height, color);
@@ -121,6 +139,7 @@ class Road_Straight extends Roads {
         super.display();
     }
 }
+
 class Road_Turn extends Roads {
     constructor(pos_x, pos_y, width, height,  pos_curve, color){
         super(pos_x, pos_y, width, height, color);
@@ -130,9 +149,9 @@ class Road_Turn extends Roads {
     display(){
         noStroke();
         fill(this.color);
-        console.log(this.pos_curve);
+
         if  (this.pos_curve === 1){
-                rect(this.pos_x, this.pos_y, this.width, this.height, 100, 0, 0, 0);
+            rect(this.pos_x, this.pos_y, this.width, this.height, 100, 0, 0, 0);
         }
         else if (this.pos_curve === 2){
             rect(this.pos_x, this.pos_y, this.width, this.height, 0, 100, 0, 0);
