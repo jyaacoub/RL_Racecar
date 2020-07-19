@@ -8,7 +8,7 @@ let size = 50;
 let gravity = 9.8;
 let K_friction = 0.1;
 
-let raceCar = new RaceCar(0, screenH-75, 40);
+let raceCar = new RaceCar(0, screenH-100, 40);
 let raceCar2 = new RaceCar(0, screenH-125, 40);
 let track = new Track(screenH, screenW);
 
@@ -19,29 +19,30 @@ function setup() {
     angleMode(DEGREES);
     rectMode(CENTER);
 
-    raceCar2.carBody = 'blue';
+    // raceCar2.carBody = 'blue';
     }
 
 function draw() {
     clear();
     renderBackground();
 
-    collisionDetection(raceCar); // collision detection
+    roadDim = collisionDetection(raceCar); // collision detection
 
     push();
     checkKeys1(raceCar);
     raceCar.applyForces();
     raceCar.display();
+    raceCar.displaySensors(roadDim);
 
     pop();
     push();
     displayBounds(raceCar);
 
-    pop();
-    push();
-    checkKeys2(raceCar2);
-    raceCar2.applyForces();
-    raceCar2.display();
+    // pop();
+    // push();
+    // checkKeys2(raceCar2);
+    // raceCar2.applyForces();
+    // raceCar2.display();
 }
 
 function displayBounds(car){
@@ -61,11 +62,13 @@ function renderBackground(){
 }
 
 function collisionDetection(car){
-    let onTrack = track.onTrack(car);
+    let [onTrack, roadDim] = track.onTrack(car);
     
     if (!onTrack){
         car.resetPos();
     }
+
+    return roadDim;
 }
 
 function checkKeys1(car){

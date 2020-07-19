@@ -53,22 +53,50 @@ class RaceCar {
         fill('white');
         circle(-w*(44/100), h/4, size/10);
         circle(-w*(44/100), -h/4, size/10);
-    
+    }
+    displaySensors(roadDim){
+        const radius = sqrt(2)*size;
+        let [l,r,t,b] = roadDim || [];
+        console.log(l);
+
+        stroke('red');
+        let dist_l = l-this.pos_x;
+        let dist_r = r-this.pos_x;
+
+        let dist_t = b-this.pos_y;
+        let dist_b = t-this.pos_y;
+        let r_car = this.rotation;
+
+        line(0,0,dist_t*sin(r_car), 
+                dist_t*cos(r_car));
+        line(0,0,dist_b*sin(r_car), 
+                dist_b*cos(r_car));
+
+        line(0,0,dist_r*cos(-r_car), dist_r*sin(-r_car));
+        line(0,0,dist_l*cos(-r_car), dist_l*sin(-r_car));
+        
+        let dist_rb = dist_r/cos(45);
+        line(0,0,dist_rb*cos(-r_car+45), dist_rb*sin(-r_car+45));
+        // line(0,0,dist_r*cos(-r_car-45), dist_r*sin(-r_car-45));
+        // line(0,0,dist_r*cos(-r_car+45), dist_r*sin(-r_car+45));
+        // line(0,0,dist_r*cos(-r_car+45), dist_r*sin(-r_car+45));
+
         // Drawing sensor lines
-        // stroke('black');
-        // const inLine = sqrt(2*size**2);
+        stroke('yellow');
     
-        // strokeWeight(0.01*size);
-        // line(0,0,size,size);
-        // line(0,0,inLine,0);
-        // line(0,0,0,inLine);
+        strokeWeight(0.03*size);
+        // line(0,0,radius,0);     // --
+        // line(0,0,-radius,0); // --
+
+        // line(0,0,0,radius);  // |
+        // line(0,0,0,-radius); // |
     
-        // line(0,0,-size,-size);
-        // line(0,0,-inLine,0);
-        // line(0,0,0,-inLine);
-    
-        // line(0,0,-size,size);
-        // line(0,0,size,-size);
+        // line(0,0,size,size);    // /
+        // line(0,0,-size,-size); // /
+
+        // line(0,0,-size,size);  // \
+        // line(0,0,size,-size);   // \
+
     }
     applyForces(){
         // Friction magnitudes
@@ -150,8 +178,8 @@ class Roads {
         this.color = color || 'lightgrey';
     }
     display(){
-        fill('red');
-        rect(this.pos_x, this.pos_y, 10, 10, 10);
+        // fill('red');
+        // rect(this.pos_x, this.pos_y, 10, 10, 10);
     }
     get borders(){
         // returns the sides of the road to determine collision
@@ -218,10 +246,10 @@ class Track {
         this.roads.push(new Road_Straight(s_W-100, s_H/2, 100, s_H-300));
 
         // Corners
-        this.roads.push(new Road_Turn(100, 100, 100, 100, 1,'yellow'));
-        this.roads.push(new Road_Turn(s_W-100, 100, 100, 100, 2,'yellow'));
-        this.roads.push(new Road_Turn(100, s_H-100, 100, 100, 4,'yellow'));
-        this.roads.push(new Road_Turn(s_W-100, s_H-100, 100, 100, 3,'yellow'));
+        this.roads.push(new Road_Turn(100, 100, 100, 100, 1));
+        this.roads.push(new Road_Turn(s_W-100, 100, 100, 100, 2));
+        this.roads.push(new Road_Turn(100, s_H-100, 100, 100, 4));
+        this.roads.push(new Road_Turn(s_W-100, s_H-100, 100, 100, 3));
     }
     display(){
         this.roads.forEach(road => {
@@ -233,14 +261,15 @@ class Track {
         let [left_C, right_C, top_C, bottom_C] = car.borders;
         
         for(let i = 0; i < this.roads.length; i++){
-            let [left_R, right_R, top_R, bottom_R] = this.roads[i].borders;
+            let roadDim = this.roads[i].borders; 
+            let [left_R, right_R, top_R, bottom_R] = roadDim;
             if (right_C >= left_R && left_C <= right_R &&
                 top_C >= bottom_R && bottom_C <= top_R ){
-                return true;
+                return [true, roadDim];
             }
         }
 
-        return false;
+        return [false, undefined];
     }
 
 }
