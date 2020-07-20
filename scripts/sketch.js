@@ -8,52 +8,67 @@ let size = 50;
 let gravity = 9.8;
 let K_friction = 0.1;
 
-let raceCar = new RaceCar(0, screenH-100, 40);
-let raceCar2 = new RaceCar(0, screenH-125, 40);
-let track = new Track(screenH, screenW);
+let raceCar;
+let raceCar2;
+let track;
+
+let ray;
+let dir = 180;
+let boundaries = [];
 
 function setup() {
     createCanvas(screenW, screenH);
-    frameRate(FR);
+    frameRate(FR/4);
 
     angleMode(DEGREES);
     rectMode(CENTER);
 
+    raceCar = new RaceCar(0, screenH-100, 40);
+    raceCar2 = new RaceCar(0, screenH-125, 40);
+    track = new Track(screenH, screenW);
+
+    ray = new Ray(200,200,100, dir);
+
+    boundaries.push(new Boundary(500,100,500,500));
+    boundaries.push(new Boundary(100,300,400,300));
     // raceCar2.carBody = 'blue';
-    }
+}
 
 function draw() {
     clear();
-    renderBackground();
+    background('black');
+    ray.show();
 
-    roadDim = collisionDetection(raceCar); // collision detection
+    fill('white');
+    textSize(30);
+    text(dir, 100,100);
 
-    push();
-    checkKeys1(raceCar);
-    raceCar.applyForces();
-    raceCar.display();
-    raceCar.displaySensors(roadDim);
+    displayBounds();
 
-    pop();
-    push();
-    displayBounds(raceCar);
+    // TODO: Test raycasting with various rays of differant lengths 
+    //      and differant sized boundaries
 
-    // pop();
-    // push();
-    // checkKeys2(raceCar2);
-    // raceCar2.applyForces();
-    // raceCar2.display();
+    // renderBackground();
+
+    // let roadDim = collisionDetection(raceCar); // collision detection
+
+    // checkKeys1(raceCar);
+    // raceCar.applyForces();
+    // raceCar.display();
+    // raceCar.displaySensors(roadDim);
+
+    // raceCar.displayBounds();
+    // // checkKeys2(raceCar2);
+    // // raceCar2.applyForces();
+    // // raceCar2.display();
 }
 
-function displayBounds(car){
-    stroke('red');
-    let [l,r,t,b] = car.borders;
-    strokeWeight(2);
-    
-    line(l,b,l,t);
-    line(r,b,r,t);
-    line(l,b,r,b);
-    line(l,t,r,t);
+function displayBounds(){
+    for (let i = 0; i < boundaries.length; i++) {
+        const boundary = boundaries[i];
+        boundary.show();
+        
+    }
 }
 
 function renderBackground(){
