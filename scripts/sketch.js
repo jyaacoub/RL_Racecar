@@ -3,50 +3,40 @@ const screenH =  840;
 
 let FR = 100;
 
-let size = 50;
-
-let gravity = 9.8;
-let K_friction = 0.1;
-
 let raceCar;
 let raceCar2;
 let track;
 
+let rays = [];
 let ray;
-let dir = 180;
+let mag = 100;
 let boundaries = [];
 
 function setup() {
     createCanvas(screenW, screenH);
-    frameRate(FR/4);
+    frameRate(FR);
 
     angleMode(DEGREES);
     rectMode(CENTER);
 
-    raceCar = new RaceCar(0, screenH-100, 40);
-    raceCar2 = new RaceCar(0, screenH-125, 40);
-    track = new Track(screenH, screenW);
-
-    ray = new Ray(200,200,100, dir);
+    // raceCar = new RaceCar(0, screenH-100, 40);
+    // raceCar2 = new RaceCar(0, screenH-125, 40);
+    // track = new Track(screenH, screenW);
+    
+    for (let i = 0; i <= 360; i += 2) {
+        rays.push(new Ray(350,230,300,i));
+    }
 
     boundaries.push(new Boundary(500,100,500,500));
-    boundaries.push(new Boundary(100,300,400,300));
-    // raceCar2.carBody = 'blue';
+    boundaries.push(new Boundary(100,300,400,100));
+    boundaries.push(new Boundary(200,300,400,400));
 }
 
 function draw() {
     clear();
     background('black');
-    ray.show();
-
-    fill('white');
-    textSize(30);
-    text(dir, 100,100);
 
     displayBounds();
-
-    // TODO: Test raycasting with various rays of differant lengths 
-    //      and differant sized boundaries
 
     // renderBackground();
 
@@ -65,9 +55,30 @@ function draw() {
 
 function displayBounds(){
     for (let i = 0; i < boundaries.length; i++) {
-        const boundary = boundaries[i];
-        boundary.show();
+        boundaries[i].show();
         
+    }
+
+    // TODO: Fix bug where not all rays are rendering after shortening them.
+    for (let j = 0; j < rays.length; j++) {
+        let ray = rays[j];
+        let p;
+        for (let i = 0; i < boundaries.length; i++) {
+            p = ray.cast(boundaries[i]);
+            if (p){
+                push();
+                strokeWeight(7);
+                stroke('red');
+                point(p.x, p.y);
+                pop();
+                ray.x2 = p.x - ray.x1;
+                ray.y2 = p.y - ray.y1;
+                // console.log('break');
+                // break;
+            } 
+        }
+        ray.show();
+        // console.log('show');
     }
 }
 

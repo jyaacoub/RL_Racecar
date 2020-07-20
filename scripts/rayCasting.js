@@ -7,30 +7,29 @@ class Boundary {
         push();
         strokeWeight(3);
         stroke('white');
-        line(this.a.x, this.a.y, 
-            this.b.x, this.b.y);
+        line(this.a.x, this.a.y, this.b.x, this.b.y);
         pop();
     }
 }
 
 class Ray {
-    constructor(x, y, magnitude, dir){
-        this.origin = createVector(x, y);
-
+    constructor(x1, y1, magnitude, dir, x2, y2){
+        this.x1 = x1;
+        this.y1 = y1;
         // The angle of direction is relative to the west.
-        this.dir = createVector(-magnitude*cos(dir), 
-                                -magnitude*sin(dir)); 
+        this.x2 = x2 || -magnitude*cos(dir);
+        this.y2 = y2 || -magnitude*sin(dir);
     }
     show(){
         push();
         stroke('yellow');
-        strokeWeight(3);
-        translate(this.origin.x, this.origin.y);
-        line(0,0,this.dir.x, this.dir.y);
+        strokeWeight(1);
+        translate(this.x1, this.y1);
+        line(0,0,this.x2, this.y2);
 
-        stroke('red');
-        strokeWeight(10);
-        point(0,0);
+        // stroke('red');
+        // strokeWeight(10);
+        // point(0,0);
         pop();
     }
     cast(boundary){
@@ -42,10 +41,10 @@ class Ray {
         */ 
         
         // Ray points:
-        const x1 = this.origin.x;
-        const y1 = this.origin.y;
-        const x2 = this.dir.x;
-        const y2 = this.dir.y;
+        const x1 = this.x1;
+        const y1 = this.y1;
+        const x2 = this.x2 + x1;
+        const y2 = this.y2 + y1;
 
         // Boundary points:
         const x3 = boundary.a.x;
@@ -60,14 +59,20 @@ class Ray {
             return; // means the lines are parallel.
         }
         
-        let t = ((x1-x3)*(y3-y4) - (y1-y3)*(x3-x4)) / denom;    // intersects within the first segment
-        let u = ((x1-x2)*(y1-y3) - (y1-y2)*(x1-x3)) / denom;   
+        
+        let u = -((x1-x2)*(y1-y3) - (y1-y2)*(x1-x3)) / denom;    // intersection on the second segment
+        
+        if ((0.0 <= u && u <= 1.0)){
+            let intersect_point = createVector(x3 + u*(x4-x3), y3 + u*(y4-y3));
+            return intersect_point; 
+        }
+        
+        // This is only if the casted ray is infinitely long:
 
-        if (!(0.0 <= t && t <= 1.0)){
-            return; // Does not intersect.
-        }
-        if (!(0.0 <= u && u <= 1.0)){
-            return; // Does not intersect.
-        }
+        // let t = ((x1-x3)*(y3-y4) - (y1-y3)*(x3-x4)) / denom;    // intersects within the first segment
+        // if ((0.0 <= t && t <= 1.0)){
+        //     let intersect_point = createVector(x1 + t*(x2-x1), y1 + t*(y2-y1));
+        //     return intersect_point; 
+        // }
     }
 }
