@@ -9,8 +9,10 @@ let track;
 
 let rays = [];
 let ray;
-let mag = 100;
+let mag = 500;
 let boundaries = [];
+
+let origin;
 
 function setup() {
     createCanvas(screenW, screenH);
@@ -19,12 +21,14 @@ function setup() {
     angleMode(DEGREES);
     rectMode(CENTER);
 
+    origin = createVector(350, 230);
+
     // raceCar = new RaceCar(0, screenH-100, 40);
     // raceCar2 = new RaceCar(0, screenH-125, 40);
     // track = new Track(screenH, screenW);
     
-    for (let i = 0; i <= 360; i += 2) {
-        rays.push(new Ray(350,230,300,i));
+    for (let i = 0; i < 360; i += 2) {
+        rays.push(new Ray(origin.x,origin.y,mag,i));
     }
 
     boundaries.push(new Boundary(500,100,500,500));
@@ -37,6 +41,7 @@ function draw() {
     background('black');
 
     displayBounds();
+    
 
     // renderBackground();
 
@@ -52,33 +57,32 @@ function draw() {
     // // raceCar2.applyForces();
     // // raceCar2.display();
 }
-
+// TODO: Fix bug where not all rays are rendering after shortening them.
 function displayBounds(){
     for (let i = 0; i < boundaries.length; i++) {
         boundaries[i].show();
-        
     }
 
-    // TODO: Fix bug where not all rays are rendering after shortening them.
     for (let j = 0; j < rays.length; j++) {
         let ray = rays[j];
+        ray.x1 = origin.x;
+        ray.y1 = origin.y;
+        ray.recalculateSize();
         let p;
         for (let i = 0; i < boundaries.length; i++) {
             p = ray.cast(boundaries[i]);
             if (p){
                 push();
                 strokeWeight(7);
-                stroke('red');
+                stroke('blue');
                 point(p.x, p.y);
                 pop();
                 ray.x2 = p.x - ray.x1;
                 ray.y2 = p.y - ray.y1;
-                // console.log('break');
-                // break;
+                break;
             } 
         }
         ray.show();
-        // console.log('show');
     }
 }
 
@@ -131,4 +135,9 @@ function checkKeys2(car){
     if (keyIsDown(83)) { // 'S'
         car.move('b');
     }
+}
+
+function mouseDragged(event) {
+    origin.x = mouseX;
+    origin.y = mouseY;
 }

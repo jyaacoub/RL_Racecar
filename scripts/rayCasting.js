@@ -16,13 +16,15 @@ class Ray {
     constructor(x1, y1, magnitude, dir, x2, y2){
         this.x1 = x1;
         this.y1 = y1;
+        this.magnitude = magnitude;
+        this.dir = dir;
         // The angle of direction is relative to the west.
         this.x2 = x2 || -magnitude*cos(dir);
         this.y2 = y2 || -magnitude*sin(dir);
     }
     show(){
         push();
-        stroke('yellow');
+        stroke('green');
         strokeWeight(1);
         translate(this.x1, this.y1);
         line(0,0,this.x2, this.y2);
@@ -31,6 +33,10 @@ class Ray {
         // strokeWeight(10);
         // point(0,0);
         pop();
+    }
+    recalculateSize(){
+        this.x2 =-this.magnitude*cos(this.dir);
+        this.y2 =-this.magnitude*sin(this.dir);
     }
     cast(boundary){
         /* This determines if the ray intersects with the boundary
@@ -61,15 +67,14 @@ class Ray {
         
         
         let u = -((x1-x2)*(y1-y3) - (y1-y2)*(x1-x3)) / denom;    // intersection on the second segment
+        let t = ((x1-x3)*(y3-y4) - (y1-y3)*(x3-x4)) / denom;    // intersects within the first segment
+
         
-        if ((0.0 <= u && u <= 1.0)){
+        if ((0.0 <= u && u <= 1.0) && (0.0 <= t && t <= 1.0)){
             let intersect_point = createVector(x3 + u*(x4-x3), y3 + u*(y4-y3));
             return intersect_point; 
         }
         
-        // This is only if the casted ray is infinitely long:
-
-        // let t = ((x1-x3)*(y3-y4) - (y1-y3)*(x3-x4)) / denom;    // intersects within the first segment
         // if ((0.0 <= t && t <= 1.0)){
         //     let intersect_point = createVector(x1 + t*(x2-x1), y1 + t*(y2-y1));
         //     return intersect_point; 
