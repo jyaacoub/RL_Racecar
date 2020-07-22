@@ -55,6 +55,7 @@ class Road_Turn extends Roads {
     constructor(pos_x, pos_y, width, height,  pos_curve, color){
         super(pos_x, pos_y, width, height, color);
         this.pos_curve = pos_curve || 1;
+        this.corner = [0,0,0,0]
 
         let l = this.pos_x - this.width/2;
         let r = this.pos_x + this.width/2;
@@ -65,41 +66,29 @@ class Road_Turn extends Roads {
             case 1:
                 this.boundaries.push(new Boundary(l,t,l,b));
                 this.boundaries.push(new Boundary(r,b,l,b));
+                this.corner[0] = 100; // 100 is the radius of the corner.
                 break;
             case 2:
                 this.boundaries.push(new Boundary(r,t,r,b));
                 this.boundaries.push(new Boundary(r,b,l,b));
+                this.corner[1] = 100;
                 break;
             case 3:
                 this.boundaries.push(new Boundary(r,t,r,b));
                 this.boundaries.push(new Boundary(r,t,l,t));
+                this.corner[2] = 100;
                 break;
             case 4:
                 this.boundaries.push(new Boundary(l,t,l,b));
                 this.boundaries.push(new Boundary(r,t,l,t));
+                this.corner[3] = 100;
                 break;
         }
     }
     display(){
         noStroke();
         fill(this.color);
-
-        if  (this.pos_curve === 1){
-            rect(this.pos_x, this.pos_y, this.width, 
-                this.height, 100, 0, 0, 0);
-        }
-        else if (this.pos_curve === 2){
-            rect(this.pos_x, this.pos_y, this.width, 
-                this.height, 0, 100, 0, 0);
-        }
-        else if (this.pos_curve === 3){
-            rect(this.pos_x, this.pos_y, this.width, 
-                this.height, 0, 0, 100, 0);
-        }
-        else if (this.pos_curve === 4){
-            rect(this.pos_x, this.pos_y, this.width, 
-                this.height, 0, 0, 0, 100);
-        }
+        rect(this.pos_x, this.pos_y, this.width, this.height, ...this.corner);
         super.display();
     }
 }

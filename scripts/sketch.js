@@ -7,8 +7,7 @@ let raceCar;
 let raceCar2;
 let track;
 
-let rays = [];
-let ray;
+let sensors = [];
 let mag = 500;
 let boundaries = [];
 
@@ -24,11 +23,10 @@ function setup() {
     origin = createVector(350, 230);
 
     raceCar = new RaceCar(0, screenH-100, 40);
-    raceCar2 = new RaceCar(0, screenH-125, 40);
     track = new Track(screenH, screenW);
     
-    for (let i = 0; i < 360; i += 1) {
-        rays.push(new Ray(origin.x,origin.y,mag,i));
+    for (let i = 0; i < 360; i += 20) {
+        sensors.push(new SensorRay(origin.x,origin.y,mag,i));
     }
 
     boundaries = track.boundaries;
@@ -36,8 +34,6 @@ function setup() {
 
 function draw() {
     clear();
-    // background('black');
-
     renderBackground();
 
     let roadDim = collisionDetection(raceCar); // collision detection
@@ -45,28 +41,20 @@ function draw() {
     checkKeys1(raceCar);
     raceCar.applyForces();
     raceCar.display();
-    raceCar.displayPosRelativeToRoad(roadDim);
+    // raceCar.displayPosRelativeToRoad(roadDim);
 
-    displayBounds();
-
-    // raceCar.displayBounds();
-    // // checkKeys2(raceCar2);
-    // // raceCar2.applyForces();
-    // // raceCar2.display();
+    // displayBounds();
 }
 
+// TODO:Clean up code 
 function displayBounds(){
     for (let i = 0; i < boundaries.length; i++) {
         boundaries[i].show();
     }
 
-    for (let j = 0; j < rays.length; j++) {
-        let ray = rays[j];
-        ray.x1 = origin.x;
-        ray.y1 = origin.y;
-        ray.readjustMagnitude();
-        ray.getDistanceToBoundary(boundaries);
-        ray.show();
+    for (let j = 0; j < sensors.length; j++) {
+        let ray = sensors[j];
+        ray.updateSensor(origin, boundaries);
     }
 }
 

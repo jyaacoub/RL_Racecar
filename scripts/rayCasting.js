@@ -18,6 +18,7 @@ class Ray {
         this.y1 = y1;
         this.magnitude = magnitude;
         this.dir = dir;
+        this.dir_origin = dir;
         // The angle of direction is relative to the west.
         this.x2 = x2 || -magnitude*cos(dir);
         this.y2 = y2 || -magnitude*sin(dir);
@@ -72,21 +73,10 @@ class Ray {
     }
     show(){
         push();
-        stroke('red');
+        stroke('yellow');
         strokeWeight(1);
         translate(this.x1, this.y1);
         line(0,0,this.x2, this.y2);
-
-        // Displaying a circle at the end of the sensor that resizes 
-        // depending on how close it is to the boundary
-        // stroke('red');
-        // let weight = (this.magnitude/this.distance)**2;
-        // if (weight <= 30){
-        //     strokeWeight(weight);
-        // } else{
-        //     strokeWeight(30);
-        // }
-        // point(this.x2,this.y2);
         pop();
     }
     getDistanceToBoundary(boundaries){
@@ -97,8 +87,7 @@ class Ray {
         for (let i = 0; i < boundaries.length; i++) {
             let intersect_point = this.cast(boundaries[i]);
             if (intersect_point){
-
-                // The following (x,y) are relative to the ray's origin:
+                // The following (x, y) are relative to the ray's origin:
                 let x = intersect_point.x - this.x1;
                 let y = intersect_point.y - this.y1;
                 let p_dist = sqrt(x**2 + y**2);
@@ -117,6 +106,41 @@ class Ray {
         }
         this.distance = min_dist;
         return min_dist;
+    }
+
+}
+
+class SensorRay extends Ray{
+    constructor(x1, y1, magnitude, dir, x2, y2){
+        super(x1, y1, magnitude, dir, x2, y2);
+    }
+    show(){
+        super.show();
+        push();
+        
+        // Displaying a circle at the end of the sensor that resizes 
+        // depending on how close it is to a boundary
+        stroke('red');
+        let weight = (this.magnitude/this.distance)**2;
+        if (weight <= 30){
+            strokeWeight(weight);
+        } else{
+            strokeWeight(30);
+        }
+        point(this.x2 + this.x1,this.y2 + this.y1);
+        pop();
+    }
+    changeDirection(direction){
+        this.dir = direction + this.dir_origin;
+        this.x2 = -this.magnitude*cos(this.dir);
+        this.y2 = -this.magnitude*sin(this.dir);
+    }
+    updateSensor(newOrigin, boundaries){
+        this.x1 = newOrigin.x;
+        this.y1 = newOrigin.y;
+        this.readjustMagnitude();
+        this.getDistanceToBoundary(boundaries);
+        this.show();
     }
 
 }

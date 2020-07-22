@@ -1,4 +1,5 @@
 class RaceCar {
+    // TODO: Add updated sensors to the front of the vehicle
     constructor(pos_x, pos_y, carSize, mass, engine_power, rotationSpeed, 
                 K_friction, gravity, frameRate){
         this.carSize = carSize || 50;
@@ -29,8 +30,22 @@ class RaceCar {
 
         this.rotation = 0;
         this.carBody = 'green';
+
+        this.sensors = [];
+        let sens_mag = 200;
+        // Front sensors:
+        for (let i = -80; i <= 80; i += 20) {
+            this.sensors.push(new SensorRay(this.pos_x,this.pos_y,sens_mag,i));
+        }
+
+        // all other sensors:
+        for (let i = 135; i < 270; i += 45) {
+            this.sensors.push(new SensorRay(this.pos_x,this.pos_y,sens_mag,i));
+        }
+        
     }
     display(){
+        this.displaySensors();  
         push();
         translate(this.pos_x, this.pos_y);
         rotate(this.rotation);
@@ -54,8 +69,18 @@ class RaceCar {
         fill('white');
         circle(-w*(44/100), h/4, size/10);
         circle(-w*(44/100), -h/4, size/10);
-        pop();
+        pop();    
     }
+
+    displaySensors(){
+        for (let j = 0; j < this.sensors.length; j++) {
+            let sensor = this.sensors[j];
+            let origin = createVector(this.pos_x, this.pos_y);
+            sensor.changeDirection(this.rotation);
+            sensor.updateSensor(origin, boundaries);
+        }
+    }
+
     displayPosRelativeToRoad(roadDim){
         push();
         translate(this.pos_x, this.pos_y);
