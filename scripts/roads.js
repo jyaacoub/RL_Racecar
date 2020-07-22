@@ -10,20 +10,6 @@ class Roads {
         // the boundaries of the road:
         this.boundaries = [];
     }
-    display(){
-        // fill('red');
-        // rect(this.pos_x, this.pos_y, 10, 10, 10);
-    }
-    get borders(){
-        // returns the sides of the road to determine collision
-        let left_x = this.pos_x - this.width/2;
-        let right_x = this.pos_x + this.width/2;
-
-        let top_y = this.pos_y + this.height/2;
-        let bottom_y = this.pos_y - this.height/2;
-
-        return [left_x, right_x, top_y, bottom_y]
-    }
 }
 
 class Road_Straight extends Roads {
@@ -47,7 +33,6 @@ class Road_Straight extends Roads {
         noStroke();
         fill(this.color);
         rect(this.pos_x, this.pos_y, this.width, this.height);
-        super.display();
     }
 }
 
@@ -89,7 +74,6 @@ class Road_Turn extends Roads {
         noStroke();
         fill(this.color);
         rect(this.pos_x, this.pos_y, this.width, this.height, ...this.corner);
-        super.display();
     }
 }
 
@@ -120,19 +104,5 @@ class Track {
         this.roads.forEach(road => {
             road.display();
         });
-    }
-    onTrack(car){
-        // Checks to see if the car is still on the track
-        let [left_C, right_C, top_C, bottom_C] = car.borders;
-        
-        for(let i = 0; i < this.roads.length; i++){
-            let roadDim = this.roads[i].borders; 
-            let [left_R, right_R, top_R, bottom_R] = roadDim;
-            if (right_C >= left_R && left_C <= right_R &&
-                top_C >= bottom_R && bottom_C <= top_R ){
-                return [true, roadDim];
-            }
-        }
-        return [false, undefined];
     }
 }

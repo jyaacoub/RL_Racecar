@@ -117,11 +117,10 @@ class SensorRay extends Ray{
     show(){
         super.show();
         push();
-        
         // Displaying a circle at the end of the sensor that resizes 
         // depending on how close it is to a boundary
         stroke('red');
-        let weight = (this.magnitude/this.distance)**2;
+        let weight = (this.magnitude/this.distance)**1.5;
         if (weight <= 30){
             strokeWeight(weight);
         } else{
@@ -140,7 +139,6 @@ class SensorRay extends Ray{
         this.y1 = newOrigin.y;
         this.readjustMagnitude();
         this.getDistanceToBoundary(boundaries);
-        this.show();
     }
 
 }

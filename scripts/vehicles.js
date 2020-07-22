@@ -1,5 +1,4 @@
 class RaceCar {
-    // TODO: Add updated sensors to the front of the vehicle
     constructor(pos_x, pos_y, carSize, mass, engine_power, rotationSpeed, 
                 K_friction, gravity, frameRate){
         this.carSize = carSize || 50;
@@ -42,7 +41,26 @@ class RaceCar {
         for (let i = 135; i < 270; i += 45) {
             this.sensors.push(new SensorRay(this.pos_x,this.pos_y,sens_mag,i));
         }
-        
+
+        this.env_boundaries = [];
+    }
+    displaySensors(){
+        for (let j = 0; j < this.sensors.length; j++) {
+            this.sensors[j].show();
+        }
+    }
+    updateSensors(){
+        // updates the sensors and returns a list of their distances
+        let distances = [];
+        for (let j = 0; j < this.sensors.length; j++) {
+            let sensor = this.sensors[j];
+            let origin = createVector(this.pos_x, this.pos_y);
+            
+            sensor.changeDirection(this.rotation);
+            sensor.updateSensor(origin, this.env_boundaries);
+            distances.push(sensor.distance);
+        }
+        return distances;
     }
     display(){
         this.displaySensors();  
@@ -70,77 +88,6 @@ class RaceCar {
         circle(-w*(44/100), h/4, size/10);
         circle(-w*(44/100), -h/4, size/10);
         pop();    
-    }
-
-    displaySensors(){
-        for (let j = 0; j < this.sensors.length; j++) {
-            let sensor = this.sensors[j];
-            let origin = createVector(this.pos_x, this.pos_y);
-            sensor.changeDirection(this.rotation);
-            sensor.updateSensor(origin, boundaries);
-        }
-    }
-
-    displayPosRelativeToRoad(roadDim){
-        push();
-        translate(this.pos_x, this.pos_y);
-        rotate(this.rotation);
-
-        const radius = sqrt(2)*this.carSize;
-        let [l,r,t,b] = roadDim || [];
-        console.log(l);
-
-        stroke('red');
-        strokeWeight(0.03*this.carSize);
-        
-        let dist_l = l-this.pos_x;
-        let dist_r = r-this.pos_x;
-
-        let dist_t = b-this.pos_y;
-        let dist_b = t-this.pos_y;
-        let r_car = this.rotation;
-
-        line(0,0,dist_t*sin(r_car), 
-                dist_t*cos(r_car));
-        line(0,0,dist_b*sin(r_car), 
-                dist_b*cos(r_car));
-
-        line(0,0,dist_r*cos(-r_car), dist_r*sin(-r_car));
-        line(0,0,dist_l*cos(-r_car), dist_l*sin(-r_car));
-        
-        let dist_rb = dist_r/cos(45);
-        line(0,0,dist_rb*cos(-r_car+45), dist_rb*sin(-r_car+45));
-        // line(0,0,dist_r*cos(-r_car-45), dist_r*sin(-r_car-45));
-        // line(0,0,dist_r*cos(-r_car+45), dist_r*sin(-r_car+45));
-        // line(0,0,dist_r*cos(-r_car+45), dist_r*sin(-r_car+45));
-
-        // Drawing sensor lines
-        stroke('yellow');
-    
-        // line(0,0,radius,0);     // --
-        // line(0,0,-radius,0); // --
-
-        // line(0,0,0,radius);  // |
-        // line(0,0,0,-radius); // |
-    
-        // line(0,0,size,size);    // /
-        // line(0,0,-size,-size); // /
-
-        // line(0,0,-size,size);  // \
-        // line(0,0,size,-size);   // \
-        pop();
-    }
-    displayBounds(){
-        push();
-        stroke('red');
-        let [l,r,t,b] = this.borders;
-        strokeWeight(2);
-        
-        line(l,b,l,t);
-        line(r,b,r,t);
-        line(l,b,r,b);
-        line(l,t,r,t);
-        pop();
     }
     applyForces(){
         // Friction magnitudes
@@ -185,7 +132,6 @@ class RaceCar {
     }
     resetPos(){
         this.rotation = 0;
-
         // Position reset
         this.pos_x = this.original_pos[0];
         this.pos_y = this.original_pos[1];
@@ -198,17 +144,14 @@ class RaceCar {
         this.F_appE_x = 0;
         this.F_appE_y = 0;
     }
-    get borders(){
-        // creating a square border box.
-        let size = this.carSize*0.12;
-
-        let left_x = this.pos_x - size;
-        let right_x = this.pos_x + size;
-
-        let top_y = this.pos_y + size;
-        let bottom_y = this.pos_y - size;
-
-        return [left_x, right_x, top_y, bottom_y]
+    collision(){
+        for (let i = 0; i < this.sensors.length; i++) {
+            const dist = this.sensors[i].distance;
+            if (dist <= 2.0){
+                return true;
+            }
+        }
+        return false;
     }
 }
 

@@ -29,24 +29,27 @@ function setup() {
         sensors.push(new SensorRay(origin.x,origin.y,mag,i));
     }
 
-    boundaries = track.boundaries;
+    raceCar.env_boundaries = track.boundaries;
 }
 
 function draw() {
     clear();
     renderBackground();
 
-    let roadDim = collisionDetection(raceCar); // collision detection
-
     checkKeys1(raceCar);
     raceCar.applyForces();
+    let distances = raceCar.updateSensors();
     raceCar.display();
-    // raceCar.displayPosRelativeToRoad(roadDim);
+    collisionDetection(raceCar); // collision detection
 
-    // displayBounds();
+    console.log(distances);
+    displayDistances(distances);
 }
 
-// TODO:Clean up code 
+function displayDistances(distances){
+    //TODO: display the numbers for each sensor on the canvas
+}
+
 function displayBounds(){
     for (let i = 0; i < boundaries.length; i++) {
         boundaries[i].show();
@@ -64,13 +67,9 @@ function renderBackground(){
 }
 
 function collisionDetection(car){
-    let [onTrack, roadDim] = track.onTrack(car);
-    
-    if (!onTrack){
+    if (car.collision()){
         car.resetPos();
     }
-
-    return roadDim;
 }
 
 function checkKeys1(car){
@@ -107,9 +106,4 @@ function checkKeys2(car){
     if (keyIsDown(83)) { // 'S'
         car.move('b');
     }
-}
-
-function mouseDragged(event) {
-    origin.x = mouseX;
-    origin.y = mouseY;
 }
