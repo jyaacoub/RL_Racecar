@@ -24,7 +24,7 @@ class Ray {
     }
     show(){
         push();
-        stroke('green');
+        stroke('lightblue');
         strokeWeight(1);
         translate(this.x1, this.y1);
         line(0,0,this.x2, this.y2);

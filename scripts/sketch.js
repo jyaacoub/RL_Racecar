@@ -27,13 +27,16 @@ function setup() {
     // raceCar2 = new RaceCar(0, screenH-125, 40);
     // track = new Track(screenH, screenW);
     
-    for (let i = 0; i < 360; i += 2) {
+    for (let i = 0; i < 360; i += 1) {
         rays.push(new Ray(origin.x,origin.y,mag,i));
     }
 
     boundaries.push(new Boundary(500,100,500,500));
     boundaries.push(new Boundary(100,300,400,100));
     boundaries.push(new Boundary(200,300,400,400));
+    boundaries.push(new Boundary(500,300,400,400));
+    boundaries.push(new Boundary(1000,500,600,400));
+    boundaries.push(new Boundary(1200,600,700,600));
 }
 
 function draw() {
@@ -41,7 +44,6 @@ function draw() {
     background('black');
 
     displayBounds();
-    
 
     // renderBackground();
 
@@ -58,6 +60,7 @@ function draw() {
     // // raceCar2.display();
 }
 // TODO: Fix bug where not all rays are rendering after shortening them.
+// Still one more bug... 
 function displayBounds(){
     for (let i = 0; i < boundaries.length; i++) {
         boundaries[i].show();
@@ -69,19 +72,36 @@ function displayBounds(){
         ray.y1 = origin.y;
         ray.recalculateSize();
         let p;
+        let min_dist = ray.magnitude;
+        let min_p;
+        let x2_new;
+        let y2_new;
+        // Finding the closest boundary
         for (let i = 0; i < boundaries.length; i++) {
             p = ray.cast(boundaries[i]);
             if (p){
-                push();
-                strokeWeight(7);
-                stroke('blue');
-                point(p.x, p.y);
-                pop();
-                ray.x2 = p.x - ray.x1;
-                ray.y2 = p.y - ray.y1;
-                break;
+                let x = p.x - ray.x1;
+                let y = p.y - ray.y1;
+                let p_dist = sqrt(x**2 + y**2);
+
+                if (p_dist <= min_dist){
+                    min_p = p;
+                    min_dist = p_dist;
+                    x2_new = x;
+                    y2_new = y;
+                }
             } 
         }
+        if (min_p){
+            // push();
+            // strokeWeight(7);
+            // stroke('blue');
+            // point(min_p.x, min_p.y);
+            // pop();
+            ray.x2 = x2_new;
+            ray.y2 = y2_new;
+        }
+        
         ray.show();
     }
 }
