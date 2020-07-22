@@ -21,22 +21,12 @@ class Ray {
         // The angle of direction is relative to the west.
         this.x2 = x2 || -magnitude*cos(dir);
         this.y2 = y2 || -magnitude*sin(dir);
-    }
-    show(){
-        push();
-        stroke('lightblue');
-        strokeWeight(1);
-        translate(this.x1, this.y1);
-        line(0,0,this.x2, this.y2);
 
-        // stroke('red');
-        // strokeWeight(10);
-        // point(0,0);
-        pop();
+        this.distance = this.magnitude;
     }
-    recalculateSize(){
-        this.x2 =-this.magnitude*cos(this.dir);
-        this.y2 =-this.magnitude*sin(this.dir);
+    readjustMagnitude(){
+        this.x2 = -this.magnitude*cos(this.dir);
+        this.y2 = -this.magnitude*sin(this.dir);
     }
     cast(boundary){
         /* This determines if the ray intersects with the boundary
@@ -80,4 +70,53 @@ class Ray {
         //     return intersect_point; 
         // }
     }
+    show(){
+        push();
+        stroke('red');
+        strokeWeight(1);
+        translate(this.x1, this.y1);
+        line(0,0,this.x2, this.y2);
+
+        // Displaying a circle at the end of the sensor that resizes 
+        // depending on how close it is to the boundary
+        // stroke('red');
+        // let weight = (this.magnitude/this.distance)**2;
+        // if (weight <= 30){
+        //     strokeWeight(weight);
+        // } else{
+        //     strokeWeight(30);
+        // }
+        // point(this.x2,this.y2);
+        pop();
+    }
+    getDistanceToBoundary(boundaries){
+        let min_dist = this.magnitude;
+        let x2_new;
+        let y2_new;
+        // Finding the closest boundary
+        for (let i = 0; i < boundaries.length; i++) {
+            let intersect_point = this.cast(boundaries[i]);
+            if (intersect_point){
+
+                // The following (x,y) are relative to the ray's origin:
+                let x = intersect_point.x - this.x1;
+                let y = intersect_point.y - this.y1;
+                let p_dist = sqrt(x**2 + y**2);
+
+                if (p_dist <= min_dist){
+                    min_dist = p_dist;
+                    x2_new = x;
+                    y2_new = y;
+                }
+            } 
+        }
+
+        if (x2_new !== undefined){
+            this.x2 = x2_new;
+            this.y2 = y2_new;
+        }
+        this.distance = min_dist;
+        return min_dist;
+    }
+
 }

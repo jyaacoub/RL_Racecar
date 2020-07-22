@@ -6,6 +6,9 @@ class Roads {
         this.width = width;
         this.height = height;
         this.color = color || 'lightgrey';
+
+        // the boundaries of the road:
+        this.boundaries = [];
     }
     display(){
         // fill('red');
@@ -24,8 +27,21 @@ class Roads {
 }
 
 class Road_Straight extends Roads {
-    constructor(pos_x, pos_y, width, height, color){
+    constructor(pos_x, pos_y, width, height, color, horizontal){
         super(pos_x, pos_y, width, height, color);
+
+        let l = this.pos_x - this.width/2;
+        let r = this.pos_x + this.width/2;
+        let b = this.pos_y - this.height/2;
+        let t = this.pos_y + this.height/2;
+
+        if (width >= height){
+            this.boundaries.push(new Boundary(l,t,r,t));
+            this.boundaries.push(new Boundary(r,b,l,b));
+        } else {
+            this.boundaries.push(new Boundary(r,t,r,b));
+            this.boundaries.push(new Boundary(l,b,l,t));
+        }
     }
     display(){
         noStroke();
@@ -39,6 +55,30 @@ class Road_Turn extends Roads {
     constructor(pos_x, pos_y, width, height,  pos_curve, color){
         super(pos_x, pos_y, width, height, color);
         this.pos_curve = pos_curve || 1;
+
+        let l = this.pos_x - this.width/2;
+        let r = this.pos_x + this.width/2;
+        let b = this.pos_y - this.height/2;
+        let t = this.pos_y + this.height/2;
+
+        switch (this.pos_curve){
+            case 1:
+                this.boundaries.push(new Boundary(l,t,l,b));
+                this.boundaries.push(new Boundary(r,b,l,b));
+                break;
+            case 2:
+                this.boundaries.push(new Boundary(r,t,r,b));
+                this.boundaries.push(new Boundary(r,b,l,b));
+                break;
+            case 3:
+                this.boundaries.push(new Boundary(r,t,r,b));
+                this.boundaries.push(new Boundary(r,t,l,t));
+                break;
+            case 4:
+                this.boundaries.push(new Boundary(l,t,l,b));
+                this.boundaries.push(new Boundary(r,t,l,t));
+                break;
+        }
     }
     display(){
         noStroke();
@@ -80,6 +120,12 @@ class Track {
         this.roads.push(new Road_Turn(s_W-100, 100, 100, 100, 2));
         this.roads.push(new Road_Turn(100, s_H-100, 100, 100, 4));
         this.roads.push(new Road_Turn(s_W-100, s_H-100, 100, 100, 3));
+
+        this.boundaries = [];
+        for (let i = 0; i < this.roads.length; i++) {
+            const road = this.roads[i];
+            this.boundaries.push(...road.boundaries);            
+        }
     }
     display(){
         this.roads.forEach(road => {
@@ -98,8 +144,6 @@ class Track {
                 return [true, roadDim];
             }
         }
-
         return [false, undefined];
     }
-
 }

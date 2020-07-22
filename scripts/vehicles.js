@@ -56,17 +56,17 @@ class RaceCar {
         circle(-w*(44/100), -h/4, size/10);
         pop();
     }
-    displaySensors(roadDim){
+    displayPosRelativeToRoad(roadDim){
         push();
         translate(this.pos_x, this.pos_y);
         rotate(this.rotation);
 
-        const radius = sqrt(2)*size;
+        const radius = sqrt(2)*this.carSize;
         let [l,r,t,b] = roadDim || [];
         console.log(l);
 
         stroke('red');
-        strokeWeight(0.03*size);
+        strokeWeight(0.03*this.carSize);
         
         let dist_l = l-this.pos_x;
         let dist_r = r-this.pos_x;
