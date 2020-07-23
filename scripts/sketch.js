@@ -4,14 +4,7 @@ const screenH =  840;
 let FR = 100;
 
 let raceCar;
-let raceCar2;
 let track;
-
-let sensors = [];
-let mag = 500;
-let boundaries = [];
-
-let origin;
 
 function setup() {
     createCanvas(screenW, screenH);
@@ -24,10 +17,6 @@ function setup() {
 
     raceCar = new RaceCar(0, screenH-100, 40);
     track = new Track(screenH, screenW);
-    
-    for (let i = 0; i < 360; i += 20) {
-        sensors.push(new SensorRay(origin.x,origin.y,mag,i));
-    }
 
     raceCar.env_boundaries = track.boundaries;
 }
@@ -39,11 +28,14 @@ function draw() {
     checkKeys1(raceCar);
     raceCar.applyForces();
     let distances = raceCar.updateSensors();
-    raceCar.display();
-    collisionDetection(raceCar); // collision detection
-
-    console.log(distances);
     displayDistances(distances);
+
+    raceCar.display();
+
+    if (raceCar.collision()){
+        raceCar.resetPos();
+    }
+    
 }
 
 function displayDistances(distances){
@@ -54,7 +46,6 @@ function displayDistances(distances){
         const dist = Math.round(distances[i]*10)/10;
         text(dist, 300 - 100*cos((i-3)*20), 500 - i*30);
     }
-
     // Back three sensors:
     for (let i = 7; i < distances.length; i++) {
         const dist = Math.round(distances[i]*10)/10;
@@ -67,7 +58,6 @@ function displayBounds(){
     for (let i = 0; i < boundaries.length; i++) {
         boundaries[i].show();
     }
-
     for (let j = 0; j < sensors.length; j++) {
         let ray = sensors[j];
         ray.updateSensor(origin, boundaries);
@@ -77,12 +67,6 @@ function displayBounds(){
 function renderBackground(){
     background(0,40,0);
     track.display();
-}
-
-function collisionDetection(car){
-    if (car.collision()){
-        car.resetPos();
-    }
 }
 
 function checkKeys1(car){
