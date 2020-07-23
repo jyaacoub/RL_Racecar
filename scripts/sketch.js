@@ -40,15 +40,33 @@ function draw() {
 
 function displayDistances(distances){
     push();
-    fill('white');
+    fill(0,255,0);
     // Front 7 sensors:
     for (let i = 0; i < 7; i++) {
         const dist = Math.round(distances[i]*10)/10;
+        if (dist < 10){
+            fill('white');
+        } else if (dist < 30){
+            fill(255,0,0);
+        } else if (dist < 60){
+            fill('yellow');
+        } else{
+            fill(0,255,0);
+        }
         text(dist, 300 - 100*cos((i-3)*20), 500 - i*30);
     }
     // Back three sensors:
     for (let i = 7; i < distances.length; i++) {
         const dist = Math.round(distances[i]*10)/10;
+        if (dist < 10){
+            fill('white');
+        } else if (dist < 30){
+            fill(255,0,0);
+        } else if (dist < 60){
+            fill('yellow');
+        } else{
+            fill(0,255,0);
+        }
         text(dist, 300 + 100*cos((i-8)*50), 320 + (i-7)*90);
     }
     pop();
@@ -65,7 +83,7 @@ function displayBounds(){
 }
 
 function renderBackground(){
-    background(0,40,0);
+    background(0,20,0);
     track.display();
 }
 
