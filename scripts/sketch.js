@@ -47,7 +47,20 @@ function draw() {
 }
 
 function displayDistances(distances){
-    //TODO: display the numbers for each sensor on the canvas
+    push();
+    fill('white');
+    // Front 7 sensors:
+    for (let i = 0; i < 7; i++) {
+        const dist = Math.round(distances[i]*10)/10;
+        text(dist, 300 - 100*cos((i-3)*20), 500 - i*30);
+    }
+
+    // Back three sensors:
+    for (let i = 7; i < distances.length; i++) {
+        const dist = Math.round(distances[i]*10)/10;
+        text(dist, 300 + 100*cos((i-8)*50), 320 + (i-7)*90);
+    }
+    pop();
 }
 
 function displayBounds(){

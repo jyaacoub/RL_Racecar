@@ -33,10 +33,9 @@ class RaceCar {
         this.sensors = [];
         let sens_mag = 200;
         // Front sensors:
-        for (let i = -80; i <= 80; i += 20) {
+        for (let i = -60; i <= 60; i += 20) {
             this.sensors.push(new SensorRay(this.pos_x,this.pos_y,sens_mag,i));
         }
-
         // all other sensors:
         for (let i = 135; i < 270; i += 45) {
             this.sensors.push(new SensorRay(this.pos_x,this.pos_y,sens_mag,i));
