@@ -1,5 +1,8 @@
-// TODO: Create a pipeline to connect the "frontend" graphics to the backend AI 
-// that controls the car
+/*
+ * TODO: 
+ *  - Research Q-Learning and learn how to build a model from scratch
+ *  - Implement it!
+ */ 
 
 class RL_controller {
     constructor(car){
