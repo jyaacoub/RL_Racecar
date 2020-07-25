@@ -28,7 +28,7 @@ function draw() {
     checkKeys1(raceCar);
     raceCar.applyForces();
     let distances = raceCar.updateSensors();
-    displayDistances(distances);
+    displayCarInfo(300,500,distances, raceCar.speed_net);
 
     raceCar.display();
 
@@ -38,7 +38,7 @@ function draw() {
     
 }
 
-function displayDistances(distances){
+function displayCarInfo(x,y,distances,speed){
     push();
     fill(0,255,0);
     // Front 7 sensors:
@@ -53,7 +53,7 @@ function displayDistances(distances){
         } else{
             fill(0,255,0);
         }
-        text(dist, 300 - 100*cos((i-3)*20), 500 - i*30);
+        text(dist, x - 100*cos((i-3)*20), y - i*30);
     }
     // Back three sensors:
     for (let i = 7; i < distances.length; i++) {
@@ -67,8 +67,12 @@ function displayDistances(distances){
         } else{
             fill(0,255,0);
         }
-        text(dist, 300 + 100*cos((i-8)*50), 320 + (i-7)*90);
+        text(dist, x + 100*cos((i-8)*50), y - (i-7)*90);
     }
+
+    // Car speed:
+    fill('white');
+    text(Math.round(speed*10)/10, x+10, y-90);
     pop();
 }
 

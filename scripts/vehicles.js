@@ -26,6 +26,7 @@ class RaceCar {
 
         this.speed_x = 0;
         this.speed_y = 0;
+        this.speed_net = 0;
 
         this.rotation = 0;
         this.carBody = 'green';
@@ -112,6 +113,8 @@ class RaceCar {
         // Reseting the forces for the next frame
         this.F_appE_x = 0;
         this.F_appE_y = 0;
+
+        this.speed_net = sqrt(this.speed_x**2 + this.speed_y**2);
     }
     move(direction){
         // Turning:
