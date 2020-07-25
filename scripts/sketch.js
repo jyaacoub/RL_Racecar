@@ -27,11 +27,15 @@ function draw() {
 
     checkKeys1(raceCar);
     raceCar.applyForces();
+
+    // The agent must be rewarded for greater speeds 
+    // and farther distances from the bounds here:
     let distances = raceCar.updateSensors();
-    displayCarInfo(300,500,distances, raceCar.speed_net);
+    displayCarInfo(1200,350,distances, raceCar.speed_net);
 
     raceCar.display();
 
+    // The agent must be punished here:
     if (raceCar.collision()){
         raceCar.resetPos();
     }

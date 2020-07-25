@@ -42,7 +42,7 @@ class RaceCar {
             this.sensors.push(new SensorRay(this.pos_x,this.pos_y,sens_mag,i));
         }
 
-        this.env_boundaries = [];
+        this.env_boundaries = []; // Set externally
     }
     displaySensors(){
         for (let j = 0; j < this.sensors.length; j++) {
@@ -103,7 +103,7 @@ class RaceCar {
         let accel_y = F_net_y / this.mass;
     
         // Delta time is seconds per frame
-        this.speed_x += accel_x * this.delta_t;
+        this.speed_x += accel_x * this.delta_t;     // units are: pixels/second
         this.speed_y += accel_y * this.delta_t;
         
         // Applying mechanics formula
@@ -157,3 +157,72 @@ class RaceCar {
     }
 }
 
+class CarAgent extends RaceCar{
+    constructor(pos_x, pos_y, carSize, mass, engine_power, rotationSpeed, 
+                K_friction, gravity, frameRate){
+        
+        super(pos_x, pos_y, carSize, mass, engine_power, rotationSpeed, 
+                K_friction, gravity, frameRate);
+        
+        // RL stuff:
+        this.brain = null;  // Set externally
+        this.reward = 0.0;
+
+        this.actions = [0,1,2,3,4];   // u,d,l,r, and nothing
+        this.action = 0;    //  Output on the world
+
+        this.num_states = this.sensors.length + 1; // includes speed
+    }
+    get numStates(){
+        return this.num_states;
+    }
+    get maxNumActions(){
+        return this.actions.length;
+    }
+    get state(){
+        let s = [];
+        for (let i = 0; i < this.sensors.length; i++) {
+            s.push(this.sensors[i].distance);            
+        }
+        s.push(this.speed_net);
+
+        // The distance to each boundary and the current speed.
+        return s;
+    }
+    sampleNextState(a){
+        // TODO: create this function to sample state if action 'a' was performed.
+
+        // PERFORM ACTION:
+            // Apply force
+            // Recalculate position
+            // Recalculate distances (from sensors)
+        
+        // APPLY REWARDS
+            // -1 for collisions
+            // +1 for greater speeds
+            // +1 for greater values from all sensors.
+        let r = 0.0;
+        
+        // Return the current state and the reward for the action for this new state
+        let ns = this.state();
+        let out = {'ns':ns, 'r':r};
+        return out;
+    }
+
+    forward() {
+        let num_sensors = this.sensors.length;
+        let ns = num_sensors * 5;
+        let input_arr = new Array(this.num_states);
+
+        for (let i = 0; i < num_sensors; i++) {
+            const s = this.sensors[i];
+
+            input_arr[i*5] = 1.0;
+            input_arr[i*5+1] = 1.0;
+            input_arr[i*5+2] = 1.0;
+            input_arr[i*5+3] = s.distance; // distance to boundary
+            
+        }
+        // TODO: Finish this as well...
+    }
+}
