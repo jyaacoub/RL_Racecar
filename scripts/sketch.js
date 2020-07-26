@@ -39,6 +39,7 @@ function draw() {
     if (raceCar.collision()){
         raceCar.resetPos();
     }
+    console.log(raceCar.terminal_speed);
     
 }
 

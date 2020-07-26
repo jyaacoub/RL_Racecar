@@ -27,19 +27,20 @@ class RaceCar {
         this.speed_x = 0;
         this.speed_y = 0;
         this.speed_net = 0;
+        this.speed_terminal = this.F_appE/(this.F_friction); // max speed due to drag
 
         this.rotation = 0;
         this.carBody = 'green';
 
         this.sensors = [];
-        let sens_mag = 200;
+        this.sens_mag = 200;
         // Front sensors:
         for (let i = -60; i <= 60; i += 20) {
-            this.sensors.push(new SensorRay(this.pos_x,this.pos_y,sens_mag,i));
+            this.sensors.push(new SensorRay(this.pos_x,this.pos_y,this.sens_mag,i));
         }
         // all other sensors:
         for (let i = 135; i < 270; i += 45) {
-            this.sensors.push(new SensorRay(this.pos_x,this.pos_y,sens_mag,i));
+            this.sensors.push(new SensorRay(this.pos_x,this.pos_y,this.sens_mag,i));
         }
 
         this.env_boundaries = []; // Set externally
@@ -105,6 +106,7 @@ class RaceCar {
         // Delta time is seconds per frame
         this.speed_x += accel_x * this.delta_t;     // units are: pixels/second
         this.speed_y += accel_y * this.delta_t;
+        this.speed_net = sqrt(this.speed_x**2 + this.speed_y**2);
         
         // Applying mechanics formula
         this.pos_x += this.speed_x * this.delta_t + 0.5 * accel_x * (this.delta_t**2);
@@ -113,8 +115,6 @@ class RaceCar {
         // Reseting the forces for the next frame
         this.F_appE_x = 0;
         this.F_appE_y = 0;
-
-        this.speed_net = sqrt(this.speed_x**2 + this.speed_y**2);
     }
     move(direction){
         // Turning:
@@ -168,7 +168,7 @@ class CarAgent extends RaceCar{
         this.brain = null;  // Set externally
         this.reward = 0.0;
 
-        this.actions = [0,1,2,3,4];   // u,d,l,r, and nothing
+        this.actions = [0,1,2,3,4];   // l,r,f,b and nothing
         this.action = 0;    //  Output on the world
 
         this.num_states = this.sensors.length + 1; // includes speed
@@ -190,39 +190,34 @@ class CarAgent extends RaceCar{
         return s;
     }
     sampleNextState(a){
-        // TODO: create this function to sample state if action 'a' was performed.
-
         // PERFORM ACTION:
-            // Apply force
-            // Recalculate position
-            // Recalculate distances (from sensors)
+        if (a === 0) this.move('l');
+        if (a === 1) this.move('r');
+        if (a === 2) this.move('f');
+        if (a === 3) this.move('b');
+        
+        this.applyForces();
+
+        // All but the last number are distance values from sensors:
+        let state = this.state();
         
         // APPLY REWARDS
-            // -1 for collisions
-            // +1 for greater speeds
-            // +1 for greater values from all sensors.
-        let r = 0.0;
+            // -2 for collisions
+            // +1 for max speed
+            // +1 for max distance values from all sensors.
+        let r;
+        if (this.collision) r -= 2;
+        for (let i = 0; i < this.sensors.length; i++) {
+            const value = state[i];
+            r += value/this.sens_mag; // normalizing the distance value.
+        }
+        r += state[-1]/this.speed_terminal; // normalizing current speed val.
         
         // Return the current state and the reward for the action for this new state
-        let ns = this.state();
+        let ns = state;
         let out = {'ns':ns, 'r':r};
         return out;
     }
-
-    forward() {
-        let num_sensors = this.sensors.length;
-        let ns = num_sensors * 5;
-        let input_arr = new Array(this.num_states);
-
-        for (let i = 0; i < num_sensors; i++) {
-            const s = this.sensors[i];
-
-            input_arr[i*5] = 1.0;
-            input_arr[i*5+1] = 1.0;
-            input_arr[i*5+2] = 1.0;
-            input_arr[i*5+3] = s.distance; // distance to boundary
-            
-        }
-        // TODO: Finish this as well...
-    }
 }
+
+// TODO: create learn function that toggles the agent to learn from its env.
