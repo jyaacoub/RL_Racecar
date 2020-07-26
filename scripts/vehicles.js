@@ -1,11 +1,11 @@
 class RaceCar {
     constructor(pos_x, pos_y, carSize, mass, engine_power, rotationSpeed, 
                 K_friction, gravity, frameRate){
-        this.carSize = carSize || 50;
+        this.carSize = carSize || 40;
         this.mass = mass || 10000;
 
         this.pos_x = pos_x || 750; // Chosen to be the center of the screen
-        this.pos_y = pos_y || 420;
+        this.pos_y = pos_y || 740;
         this.original_pos = [this.pos_x, this.pos_y];
 
         this.rotationSpeed = rotationSpeed || 2;
@@ -173,13 +173,16 @@ class CarAgent extends RaceCar{
 
         this.num_states = this.sensors.length + 1; // includes speed
     }
-    get numStates(){
+    reset(){
+        super.resetPos();
+    }
+    getNumStates(){
         return this.num_states;
     }
-    get maxNumActions(){
+    getMaxNumActions(){
         return this.actions.length;
     }
-    get state(){
+    getState(){
         let s = [];
         for (let i = 0; i < this.sensors.length; i++) {
             s.push(this.sensors[i].distance);            
@@ -199,19 +202,22 @@ class CarAgent extends RaceCar{
         this.applyForces();
 
         // All but the last number are distance values from sensors:
-        let state = this.state();
+        let state = this.getState();
         
         // APPLY REWARDS
             // -2 for collisions
             // +1 for max speed
             // +1 for max distance values from all sensors.
-        let r;
-        if (this.collision) r -= 2;
-        for (let i = 0; i < this.sensors.length; i++) {
+        let r = 0.0;
+        if (this.collision()){
+            r -= 5.0;
+            this.reset();
+        } 
+        for (let i = 0; i < state.length-1; i++) {
             const value = state[i];
-            r += value/this.sens_mag; // normalizing the distance value.
+            r += (value)/this.sens_mag; // normalizing the distance value.
         }
-        r += state[-1]/this.speed_terminal; // normalizing current speed val.
+        r += (state[state.length-1]/this.speed_terminal)*2; // normalizing current speed val.
         
         // Return the current state and the reward for the action for this new state
         let ns = state;
@@ -219,5 +225,3 @@ class CarAgent extends RaceCar{
         return out;
     }
 }
-
-// TODO: create learn function that toggles the agent to learn from its env.
