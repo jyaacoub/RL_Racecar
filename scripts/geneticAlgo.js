@@ -20,9 +20,6 @@ class RL_controller {
         // There are 4 differant things the model can do:
         //      Turn left, turn right, accelerate, and reverse.
     }
-    get fitness(){
-
-    }
 }
 
 class GA_controller {
@@ -36,8 +33,5 @@ class GA_controller {
     performAction(car){
         // There are 4 differant things the model can do:
         //      Turn left, turn right, accelerate, and reverse.
-    }
-    get fitness(goal){
-        
     }
 }

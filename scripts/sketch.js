@@ -35,6 +35,7 @@ let action, state;
 let smooth_reward_history = [];
 let smooth_reward = null;
 let flott = 0;
+let nflot = 1000;
 function togglelearn(){ 
     if(sid === -1) {
         sid = setInterval(function() {
