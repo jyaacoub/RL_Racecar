@@ -20,7 +20,7 @@ function start(){
     spec.experience_size = 5000; // size of experience replay memory
     spec.learning_steps_per_iteration = 20;
     spec.tderror_clamp = 1.0; // for robustness
-    spec.num_hidden_units = 100 // number of neurons in hidden layer
+    spec.num_hidden_units = 20 // number of neurons in hidden layer
     
     // setup();     // Is this nessecary?
 
@@ -29,7 +29,8 @@ function start(){
     togglelearn();
 }
 
-let steps_per_tick = 10;
+// TODO: UNDERSTAND WHAT IS GOING ON HERE:
+let steps_per_tick = 1;
 let sid = -1;
 let action, state;
 let smooth_reward_history = [];
@@ -39,7 +40,7 @@ let nflot = 1000;
 function togglelearn(){ 
     if(sid === -1) {
         sid = setInterval(function() {
-            for(var k=0; k<steps_per_tick; k++) {
+            for(var k=0; k < steps_per_tick; k++) {
                 state = env.getState();
                 action = agent.act(state);
                 var obs = env.sampleNextState(action);

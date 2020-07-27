@@ -149,7 +149,7 @@ class RaceCar {
     collision(){
         for (let i = 0; i < this.sensors.length; i++) {
             const dist = this.sensors[i].distance;
-            if (dist <= 2.0){
+            if (dist <= 5.0){
                 return true;
             }
         }
@@ -211,15 +211,19 @@ class CarAgent extends RaceCar{
         let r = 0.0;
         if (this.collision()){
             r -= 5.0;
+            console.log('Collision');
             this.reset();
-        } 
-        for (let i = 0; i < state.length-1; i++) {
-            const value = state[i];
-            r += (value)/this.sens_mag; // normalizing the distance value.
-            if (value < 20) r -= 1.0;
         }
-        r += (state[state.length-1]/this.speed_terminal)*2; // normalizing current speed val.
+
+        // for (let i = 0; i < state.length-1; i++) {
+        //     const value = state[i];
+        //     // r += (value)/this.sens_mag; // normalizing the distance value.
+        //     if (value < 20) r -= 2.0;
+        // }
+        r += (state[state.length-1]/this.speed_terminal)*5; // normalizing current speed val.
         
+        if (a === 2) r+= 0.2; // Bonus for moving forwards
+        console.log(r);
         // Return the current state and the reward for the action for this new state
         let ns = state;
         let out = {'ns':ns, 'r':r};
