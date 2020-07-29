@@ -214,7 +214,7 @@ class CarAgent extends RaceCar{
         for (let i = 0; i < state.length-1; i++) {
             const value = state[i];
             r += (value)/this.sens_mag; // normalizing the distance value.
-            if (value < 20) r -= 2.0;
+            if (value < 20) r -= 5.0;
         }
         r += (state[state.length-1]/this.speed_terminal)*5; // normalizing current speed val.
         
