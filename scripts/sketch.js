@@ -1,7 +1,7 @@
 const screenW = 1500;
 const screenH =  840;
 
-let FR = 100;
+let FR = 10000;
 
 let raceCar;
 let track;
@@ -20,51 +20,21 @@ function start(){
     spec.experience_size = 5000; // size of experience replay memory
     spec.learning_steps_per_iteration = 20;
     spec.tderror_clamp = 1.0; // for robustness
-    spec.num_hidden_units = 20 // number of neurons in hidden layer
-    
-    // setup();     // Is this nessecary?
+    spec.num_hidden_units = 100 // number of neurons in hidden layer
 
     agent = new RL.DQNAgent(env, spec);
-
-    togglelearn();
 }
 
-// TODO: UNDERSTAND WHAT IS GOING ON HERE:
 let steps_per_tick = 1;
-let sid = -1;
 let action, state;
-let smooth_reward_history = [];
-let smooth_reward = null;
-let flott = 0;
-let nflot = 1000;
-function togglelearn(){ 
-    if(sid === -1) {
-        sid = setInterval(function() {
-            for(var k=0; k < steps_per_tick; k++) {
-                state = env.getState();
-                action = agent.act(state);
-                var obs = env.sampleNextState(action);
-                agent.learn(obs.r);
-
-                if(smooth_reward == null) { smooth_reward = obs.r; }
-                smooth_reward = smooth_reward * 0.999 + obs.r * 0.001;
-                
-                flott += 1;
-                if(flott === 200) {
-                    // record smooth reward
-                    if(smooth_reward_history.length >= nflot) {
-                        smooth_reward_history = smooth_reward_history.slice(1);
-                    }
-                    smooth_reward_history.push(smooth_reward);
-                    flott = 0;
-                }
-            }
-            drawAgent();
-        }, 20);
-    } else {
-      clearInterval(sid); // stops the time.
-      sid = -1;
+function draw(){
+    for(var k=0; k < steps_per_tick; k++) {
+        state = env.getState();
+        action = agent.act(state);
+        var obs = env.sampleNextState(action);
+        agent.learn(obs.r);
     }
+    drawAgent(obs.r);
 }
 
 function setup() {
@@ -84,27 +54,18 @@ function setup() {
     start();
 }
 
-function drawAgent() {
+function drawAgent(reward) {
     clear();
     renderBackground();
-
-    // checkKeys1(raceCar);
-    // raceCar.applyForces();
-
     // The agent must be rewarded for greater speeds 
     // and farther distances from the bounds here:
     let distances = raceCar.updateSensors();
-    displayCarInfo(1200,350,distances, raceCar.speed_net);
+    displayCarInfo(1200,350,distances, raceCar.speed_net, reward);
 
     raceCar.display();
-
-    // The agent must be punished here:
-    // if (raceCar.collision()){
-    //     raceCar.resetPos();
-    // }    
 }
 
-function displayCarInfo(x,y,distances,speed){
+function displayCarInfo(x,y,distances,speed, reward){
     push();
     fill(0,255,0);
     // Front 7 sensors:
@@ -139,6 +100,7 @@ function displayCarInfo(x,y,distances,speed){
     // Car speed:
     fill('white');
     text(Math.round(speed*10)/10, x+10, y-90);
+    text(Math.round(reward*100)/100, x-200 , y-90);
     pop();
 }
 

@@ -1,9 +1,4 @@
-/*
- * TODO: 
- *  - Research Q-Learning and learn how to build a model from scratch
- *  - Implement it!
- */ 
-
+// TODO: Bring all RL code into this file, for organization
 class RL_controller {
     constructor(car){
         this.car = car;     // The car that it will be in control of.

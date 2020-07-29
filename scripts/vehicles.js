@@ -205,25 +205,20 @@ class CarAgent extends RaceCar{
         let state = this.getState();
         
         // APPLY REWARDS
-            // -2 for collisions
-            // +1 for max speed
-            // +1 for max distance values from all sensors.
         let r = 0.0;
         if (this.collision()){
             r -= 5.0;
-            console.log('Collision');
             this.reset();
         }
 
-        // for (let i = 0; i < state.length-1; i++) {
-        //     const value = state[i];
-        //     // r += (value)/this.sens_mag; // normalizing the distance value.
-        //     if (value < 20) r -= 2.0;
-        // }
+        for (let i = 0; i < state.length-1; i++) {
+            const value = state[i];
+            r += (value)/this.sens_mag; // normalizing the distance value.
+            if (value < 20) r -= 2.0;
+        }
         r += (state[state.length-1]/this.speed_terminal)*5; // normalizing current speed val.
         
-        if (a === 2) r+= 0.2; // Bonus for moving forwards
-        console.log(r);
+        if (a === 2) r += 0.2; // Bonus for moving forwards
         // Return the current state and the reward for the action for this new state
         let ns = state;
         let out = {'ns':ns, 'r':r};
