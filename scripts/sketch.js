@@ -3,38 +3,26 @@ const screenH =  840;
 
 let FR = 10000;
 
-let raceCar;
+let car;
+let car_controller_env;
 let track;
 
 let spec = {};
-let env;
 let agent;
-function start(){
-    env = raceCar;
+let action, state;
 
+function start(){
     spec.update = 'qlearn'; // qlearn | sarsa
     spec.gamma = 0.9; // discount factor, [0, 1)
     spec.epsilon = 0.2; // initial epsilon for epsilon-greedy policy, [0, 1)
     spec.alpha = 0.01; // value function learning rate
-    spec.experience_add_every = 10; // number of time steps before we add another experience to replay memory
+    spec.experience_add_every = 50; // number of time steps before we add another experience to replay memory
     spec.experience_size = 5000; // size of experience replay memory
     spec.learning_steps_per_iteration = 20;
     spec.tderror_clamp = 1.0; // for robustness
-    spec.num_hidden_units = 100 // number of neurons in hidden layer
+    spec.num_hidden_units = 600; // number of neurons in hidden layer
 
-    agent = new RL.DQNAgent(env, spec);
-}
-
-let steps_per_tick = 1;
-let action, state;
-function draw(){
-    for(var k=0; k < steps_per_tick; k++) {
-        state = env.getState();
-        action = agent.act(state);
-        var obs = env.sampleNextState(action);
-        agent.learn(obs.r);
-    }
-    drawAgent(obs.r);
+    agent = new Agent(car_controller_env, spec, 'rl');
 }
 
 function setup() {
@@ -46,23 +34,31 @@ function setup() {
 
     origin = createVector(350, 230);
 
-    raceCar = new CarAgent();
+    car = new Car();
     track = new Track(screenH, screenW);
 
-    raceCar.env_boundaries = track.boundaries;
+    car.env_boundaries = track.boundaries;
 
+    car_controller_env = new RL_controller_env(car);
     start();
+}
+
+function draw(){
+    state = car_controller_env.getState();
+    action = agent.network.act(state);
+    var obs = car_controller_env.sampleNextState(action);
+    agent.network.learn(obs.r);
+
+    drawAgent(obs.r); // comment this out if you don't want it to be visualized.
 }
 
 function drawAgent(reward) {
     clear();
     renderBackground();
-    // The agent must be rewarded for greater speeds 
-    // and farther distances from the bounds here:
-    let distances = raceCar.updateSensors();
-    displayCarInfo(1200,350,distances, raceCar.speed_net, reward);
+    displayCarInfo(1200,350, car.updateSensors(), 
+                            car.speed_net, reward);
 
-    raceCar.display();
+    car.display();
 }
 
 function displayCarInfo(x,y,distances,speed, reward){
@@ -83,7 +79,7 @@ function displayCarInfo(x,y,distances,speed, reward){
         text(dist, x - 100*cos((i-3)*20), y - i*30);
     }
     // Back three sensors:
-    for (let i = 7; i < distances.length; i++) {
+    for (let i = distances.length-1; i >= 7; i--) {
         const dist = Math.round(distances[i]*10)/10;
         if (dist < 10){
             fill('white');
@@ -153,4 +149,10 @@ function checkKeys2(car){
     if (keyIsDown(83)) { // 'S'
         car.move('b');
     }
+}
+
+document.getElementById("save_agent").onclick = function (){
+    // TODO: Script to save agent here:
+    console.log('Saving current agent...');
+    car_controller_env.saveAgent();
 }

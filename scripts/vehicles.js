@@ -1,4 +1,4 @@
-class RaceCar {
+class Car {
     constructor(pos_x, pos_y, carSize, mass, engine_power, rotationSpeed, 
                 K_friction, gravity, frameRate){
         this.carSize = carSize || 40;
@@ -6,7 +6,7 @@ class RaceCar {
 
         this.pos_x = pos_x || 750; // Chosen to be the center of the screen
         this.pos_y = pos_y || 740;
-        this.original_pos = [this.pos_x, this.pos_y];
+        this.original_pos = createVector(this.pos_x, this.pos_y);
 
         this.rotationSpeed = rotationSpeed || 2;
 
@@ -135,8 +135,8 @@ class RaceCar {
     resetPos(){
         this.rotation = 0;
         // Position reset
-        this.pos_x = this.original_pos[0];
-        this.pos_y = this.original_pos[1];
+        this.pos_x = this.original_pos.x;
+        this.pos_y = this.original_pos.y;
         
         // Speed
         this.speed_x = 0;
@@ -154,74 +154,5 @@ class RaceCar {
             }
         }
         return false;
-    }
-}
-
-class CarAgent extends RaceCar{
-    constructor(pos_x, pos_y, carSize, mass, engine_power, rotationSpeed, 
-                K_friction, gravity, frameRate){
-        
-        super(pos_x, pos_y, carSize, mass, engine_power, rotationSpeed, 
-                K_friction, gravity, frameRate);
-        
-        // RL stuff:
-        this.brain = null;  // Set externally
-        this.reward = 0.0;
-
-        this.actions = [0,1,2,3,4];   // l,r,f,b and nothing
-        this.action = 0;    //  Output on the world
-
-        this.num_states = this.sensors.length + 1; // includes speed
-    }
-    reset(){
-        super.resetPos();
-    }
-    getNumStates(){
-        return this.num_states;
-    }
-    getMaxNumActions(){
-        return this.actions.length;
-    }
-    getState(){
-        let s = [];
-        for (let i = 0; i < this.sensors.length; i++) {
-            s.push(this.sensors[i].distance);            
-        }
-        s.push(this.speed_net);
-
-        // The distance to each boundary and the current speed.
-        return s;
-    }
-    sampleNextState(a){
-        // PERFORM ACTION:
-        if (a === 0) this.move('l');
-        if (a === 1) this.move('r');
-        if (a === 2) this.move('f');
-        if (a === 3) this.move('b');
-        
-        this.applyForces();
-
-        // All but the last number are distance values from sensors:
-        let state = this.getState();
-        
-        // APPLY REWARDS
-        let r = 0.0;
-        if (this.collision()){
-            r -= 5.0;
-            this.reset();
-        }
-
-        for (let i = 0; i < state.length-1; i++) {
-            const value = state[i];
-            r += (value)/this.sens_mag; // normalizing the distance value.
-            if (value < 20) r -= 5.0;
-        }
-        r += (state[state.length-1]/this.speed_terminal)*5; // normalizing current speed val.
-        
-        if (a === 2) r += 0.2; // Bonus for moving forwards
-        // Return the current state and the reward for the action for this new state
-        let ns = state;
-        let out = {'ns':ns, 'r':r};
-        return out;
     }
 }
