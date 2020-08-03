@@ -1,13 +1,7 @@
 class Agent {
-    constructor(env, spec, type, fileName){
+    constructor(env, spec, type){
         if (type === 'rl'){
             this.network = new RL.DQNAgent(env, spec);
-        }
-        if (fileName){
-            let j = this.loadAgent(fileName);
-            if (j){
-                this.network.fromJSON(j);
-            }
         }
     }
     getFilePath(fileName){
@@ -23,14 +17,32 @@ class Agent {
     saveAgent(fileName){
         const filePath = this.getFilePath(fileName);
         console.log(filePath);
-        
+        const content = JSON.stringify(this.network.toJSON());
+
+        // In order to save the JSON into a text file we must first create a
+        // temp element to hold the data so that we can send it to the server
+        let a = document.createElement("a");
+
+        // Blob == Binary Large OBject
+        // let file = new Blob([content], {type: 'text/plain'});
+        a.href = "data:text/json;charset=utf-8," 
+                    + encodeURIComponent(content);
+        a.download = 'trainedAgent.json';
+        a.click();        
     }
     loadAgent(fileName){
         // Gets the JSON file for this particular agent
         const filePath = this.getFilePath(fileName);
-        console.log(filePath);
+        let network = this.network;
+        console.log('Loading from json:', filePath);
 
-        // returns nothing (undef.) if the JSON file doesn't exist
+        $.getJSON(filePath, function(data){
+            console.log('Success');
+            network.fromJSON(data);
+            console.log(network);
+        }).fail(function(){
+            console.log('Failed');
+        });
     }
 }
 
@@ -84,13 +96,13 @@ class RL_controller_env {
         for (let i = 0; i < state.length-1; i++) {
             const value = state[i];
             let normal = (value)/this.car.sens_mag; // normalizing the distance value.
-            r += normal*2 - 1;
+            r += normal*2 - 1.0;
         }
 
         // normalizing current speed val.
         r += (state[state.length-1]/this.car.speed_terminal)*5; 
         
-        if (a === 2) r += 0.5; // Bonus for moving forwards
+        if (a === 2) r += .5; // Bonus for moving forwards
         // Return the current state and the reward for the action for this new state
         let ns = state;
         let out = {'ns':ns, 'r':r};

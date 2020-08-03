@@ -18,11 +18,12 @@ function start(){
     spec.alpha = 0.01; // value function learning rate
     spec.experience_add_every = 50; // number of time steps before we add another experience to replay memory
     spec.experience_size = 5000; // size of experience replay memory
-    spec.learning_steps_per_iteration = 20;
+    spec.learning_steps_per_iteration = 10;
     spec.tderror_clamp = 1.0; // for robustness
     spec.num_hidden_units = 600; // number of neurons in hidden layer
 
     agent = new Agent(car_controller_env, spec, 'rl');
+    agent.loadAgent('trainedAgent.json');
 }
 
 function setup() {
@@ -154,5 +155,5 @@ function checkKeys2(car){
 document.getElementById("save_agent").onclick = function (){
     // TODO: Script to save agent here:
     console.log('Saving current agent...');
-    car_controller_env.saveAgent();
+    agent.saveAgent();
 }
