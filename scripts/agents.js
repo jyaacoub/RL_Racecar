@@ -92,18 +92,31 @@ class RL_controller_env {
             r -= 5.0;
             this.car.resetPos();
         }
-
+        
         for (let i = 0; i < state.length-1; i++) {
             const value = state[i];
             let normal = (value)/this.car.sens_mag; // normalizing the distance value.
-            r += normal*2 - 1.0;
+            if (i === 3){
+                r += normal*4 - 2.0; // the center sensor is worth more.
+            } else {
+                r += normal*2 - 1.0;
+            }
         }
 
         // normalizing current speed val.
         r += (state[state.length-1]/this.car.speed_terminal)*5; 
         
-        if (a === 2) r += .5; // Bonus for moving forwards
         // Return the current state and the reward for the action for this new state
+
+        // rewarding it for how far it can get from the starting point.
+        // let dist_checkpoint = this.car.pos_x - this.car.original_pos.x + 200;
+
+        // r -= dist_checkpoint/150;
+        
+        // if (dist_checkpoint === 0){
+        //     this.car.resetPos();
+        // }
+
         let ns = state;
         let out = {'ns':ns, 'r':r};
         return out;

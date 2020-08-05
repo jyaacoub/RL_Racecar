@@ -34,7 +34,7 @@ class Car {
 
         this.sensors = [];
         this.sens_mag = 200;
-        // Front sensors:
+        // Front sensors: ()
         for (let i = -60; i <= 60; i += 20) {
             this.sensors.push(new SensorRay(this.pos_x,this.pos_y,this.sens_mag,i));
         }
