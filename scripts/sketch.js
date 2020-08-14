@@ -12,21 +12,6 @@ let spec = {};
 let agent;
 let action, state;
 
-function start(){
-    spec.update = 'qlearn'; // qlearn | sarsa
-    spec.gamma = 0.7; // discount factor, [0, 1)
-    spec.epsilon = 0.2; // initial epsilon for epsilon-greedy policy, [0, 1)
-    spec.alpha = 0.005; // value function learning rate
-    spec.experience_add_every = 5; // number of time steps before we add another experience to replay memory
-    spec.experience_size = 5000; // size of experience replay memory
-    spec.learning_steps_per_iteration = 5;
-    spec.tderror_clamp = 1.0; // for robustness
-    spec.num_hidden_units = 600; // number of neurons in hidden layer
-
-    agent = new Agent(car_controller_env, spec, 'rl');
-    agent.loadAgent('trainedAgent.json');
-}
-
 function setup() {
     createCanvas(screenW, screenH);
     frameRate(FR);
@@ -42,17 +27,35 @@ function setup() {
     car.env_boundaries = track.boundaries;
 
     car_controller_env = new RL_controller_env(car);
-    start();
+    initAgent();
 }
 
+function initAgent(){
+    spec.update = 'qlearn'; // qlearn | sarsa
+    spec.gamma = 0.7; // discount factor, [0, 1)
+    spec.epsilon = 0.2; // initial epsilon for epsilon-greedy policy, [0, 1)
+    spec.alpha = 0.005; // value function learning rate
+    spec.experience_add_every = 5; // number of time steps before we add another experience to replay memory
+    spec.experience_size = 5000; // size of experience replay memory
+    spec.learning_steps_per_iteration = 5;
+    spec.tderror_clamp = 1.0; // for robustness
+    spec.num_hidden_units = 600; // number of neurons in hidden layer
+
+    agent = new Agent(car_controller_env, spec, 'rl');
+    agent.loadAgent('trainedAgent.json');
+}
+
+// This function is called every frame:
 function draw(){
-    if (frameCount % 1 === 0){
-        console.log(frameCount);
+    if (frameCount % 1 === 0){ // Choosing how often the agent learns
         state = car_controller_env.getState();
         action = agent.network.act(state);
+
+        // Executing the action and getting the reward value:
         var obs = car_controller_env.sampleNextState(action);
+
         agent.network.learn(obs.r);
-        reward = obs.r
+        reward = obs.r;
     }
 
     drawAgent(); // comment this out if you don't want it to be visualized.
@@ -60,10 +63,13 @@ function draw(){
 
 function drawAgent() {
     clear();
-    renderBackground();
+    // Background:
+    background(0,20,0);
+    track.display();
+
+    // Agents and stats:
     displayCarInfo(1200,350, car.updateSensors(), 
                             car.speed_net, reward);
-
     car.display();
 }
 
@@ -106,21 +112,6 @@ function displayCarInfo(x,y,distances,speed, reward){
     pop();
 }
 
-function displayBounds(){
-    for (let i = 0; i < boundaries.length; i++) {
-        boundaries[i].show();
-    }
-    for (let j = 0; j < sensors.length; j++) {
-        let ray = sensors[j];
-        ray.updateSensor(origin, boundaries);
-    }
-}
-
-function renderBackground(){
-    background(0,20,0);
-    track.display();
-}
-
 function checkKeys1(car){
     // Turning
     if (keyIsDown(LEFT_ARROW)) {
@@ -158,7 +149,6 @@ function checkKeys2(car){
 }
 
 document.getElementById("save_agent").onclick = function (){
-    // TODO: Script to save agent here:
     console.log('Saving current agent...');
     agent.saveAgent();
 }

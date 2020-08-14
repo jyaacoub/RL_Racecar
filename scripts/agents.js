@@ -93,18 +93,18 @@ class RL_controller_env {
             this.car.resetPos();
         }
         
-        for (let i = 0; i < state.length-1; i++) {
-            const value = state[i];
-            let normal = (value)/this.car.sens_mag; // normalizing the distance value.
-            if (i === 3){
-                r += normal*4 - 2.0; // the center sensor is worth more.
-            } else {
-                r += normal*2 - 1.0;
-            }
-        }
+        // for (let i = 0; i < state.length-1; i++) {
+        //     const value = state[i];
+        //     let normal = (value)/this.car.sens_mag; // normalizing the distance value.
+        //     // if (i === 3){
+        //     //     r += normal*4 - 2.0; // the center sensor is worth more.
+        //     // } else {
+        //     //     r += normal*2 - 1.0;
+        //     // }
+        // }
 
         // normalizing current speed val.
-        r += (state[state.length-1]/this.car.speed_terminal)*5; 
+        r += (state[state.length-1]/this.car.speed_terminal)*5.0; 
         
         // Return the current state and the reward for the action for this new state
 
@@ -123,15 +123,15 @@ class RL_controller_env {
     }
 }
 
-class GA_controller extends Agent {
-    constructor(car){
-        super(car);
-    }
-    decideOnAction(){
-        // From the current distances it decides what action to perform next
-    }
-    performAction(car){
-        // There are 4 differant things the model can do:
-        //      Turn left, turn right, accelerate, and reverse.
-    }
-}
+// class GA_controller extends Agent {
+//     constructor(car){
+//         super(car);
+//     }
+//     decideOnAction(){
+//         // From the current distances it decides what action to perform next
+//     }
+//     performAction(car){
+//         // There are 4 differant things the model can do:
+//         //      Turn left, turn right, accelerate, and reverse.
+//     }
+// }
