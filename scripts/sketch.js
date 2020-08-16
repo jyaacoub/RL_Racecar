@@ -17,7 +17,7 @@ function setup() {
     frameRate(FR);
 
     angleMode(DEGREES);
-    rectMode(CENTER);
+    rectMode(CENTER); // From where rectangles are drawn from
 
     origin = createVector(350, 230);
 
@@ -32,14 +32,14 @@ function setup() {
 
 function initAgent(){
     spec.update = 'qlearn'; // qlearn | sarsa
-    spec.gamma = 0.7; // discount factor, [0, 1)
+    spec.gamma = 0.9; // discount factor, [0, 1)
     spec.epsilon = 0.2; // initial epsilon for epsilon-greedy policy, [0, 1)
     spec.alpha = 0.005; // value function learning rate
     spec.experience_add_every = 5; // number of time steps before we add another experience to replay memory
-    spec.experience_size = 5000; // size of experience replay memory
+    spec.experience_size = 1000; // size of experience replay memory
     spec.learning_steps_per_iteration = 5;
     spec.tderror_clamp = 1.0; // for robustness
-    spec.num_hidden_units = 600; // number of neurons in hidden layer
+    spec.num_hidden_units = 100; // number of neurons in hidden layer
 
     agent = new Agent(car_controller_env, spec, 'rl');
     agent.loadAgent('trainedAgent.json');
