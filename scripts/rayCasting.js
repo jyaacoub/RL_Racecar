@@ -13,7 +13,7 @@ class Boundary {
 }
 
 class Ray {
-    constructor(x1, y1, magnitude, dir, x2, y2){
+    constructor(x1, y1, magnitude, dir, x2, y2, color){
         this.x1 = x1;
         this.y1 = y1;
         this.magnitude = magnitude;
@@ -24,6 +24,8 @@ class Ray {
         this.y2 = y2 || -magnitude*sin(dir);
 
         this.distance = this.magnitude;
+        
+        this.color = color || "yellow";
     }
     readjustMagnitude(){
         this.x2 = -this.magnitude*cos(this.dir);
@@ -73,7 +75,7 @@ class Ray {
     }
     show(){
         push();
-        stroke('yellow');
+        stroke(this.color);
         strokeWeight(1);
         translate(this.x1, this.y1);
         line(0,0,this.x2, this.y2);
@@ -111,8 +113,8 @@ class Ray {
 }
 
 class SensorRay extends Ray{
-    constructor(x1, y1, magnitude, dir, x2, y2){
-        super(x1, y1, magnitude, dir, x2, y2);
+    constructor(x1, y1, magnitude, dir, x2, y2, color){
+        super(x1, y1, magnitude, dir, x2, y2, color);
     }
     show(){
         super.show();

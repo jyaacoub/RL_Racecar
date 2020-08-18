@@ -33,14 +33,21 @@ class Car {
         this.carBody = 'green';
 
         this.sensors = [];
-        this.sens_mag = 200;
-        // Front sensors: ()
+        this.sens_mag = 400;
+
+        // These are what are displayed on the screen:
+        // Front sensors:
         for (let i = -60; i <= 60; i += 20) {
             this.sensors.push(new SensorRay(this.pos_x,this.pos_y,this.sens_mag,i));
         }
-        // all other sensors:
-        for (let i = 135; i < 270; i += 45) {
+        // Back sensors:
+        for (let i = 120; i < 270; i += 40) {
             this.sensors.push(new SensorRay(this.pos_x,this.pos_y,this.sens_mag,i));
+        }
+
+        // Not displayed sensors:
+        for (let i = 100; i <= 260; i += 40){
+            this.sensors.push(new SensorRay(this.pos_x,this.pos_y,this.sens_mag,i,0,0,'lightBlue'));
         }
 
         this.env_boundaries = []; // Set externally

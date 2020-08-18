@@ -30,10 +30,13 @@ function setup() {
     initAgent();
 }
 
+// The exploration-exploitation dilemma is solved with epsilon that balances the two by chosing between them randomly.
+//      This is called an Epsilon-Greedy policy.
+//      The actual epsilon value refers to the probability of choosing to explore.
 function initAgent(){
     spec.update = 'qlearn'; // qlearn | sarsa
     spec.gamma = 0.9; // discount factor, [0, 1)
-    spec.epsilon = 0.2; // initial epsilon for epsilon-greedy policy, [0, 1)
+    spec.epsilon = 0.5; // initial epsilon for epsilon-greedy policy, [0, 1)
     spec.alpha = 0.005; // value function learning rate
     spec.experience_add_every = 5; // number of time steps before we add another experience to replay memory
     spec.experience_size = 1000; // size of experience replay memory
@@ -42,23 +45,25 @@ function initAgent(){
     spec.num_hidden_units = 100; // number of neurons in hidden layer
 
     agent = new Agent(car_controller_env, spec, 'rl');
-    agent.loadAgent('trainedAgent.json');
+    // agent.loadAgent('trainedAgent.json');
 }
 
-// This function is called every frame:
+// This function is called every frame (by P5.js):
 function draw(){
-    if (frameCount % 1 === 0){ // Choosing how often the agent learns
+    if (frameCount % 1 === 0){ // Agent is getting information every n frames
         state = car_controller_env.getState();
-        action = agent.network.act(state);
+        action = agent.brain.act(state);
 
         // Executing the action and getting the reward value:
         var obs = car_controller_env.sampleNextState(action);
-
-        agent.network.learn(obs.r);
+        agent.brain.learn(obs.r);
         reward = obs.r;
     }
 
     drawAgent(); // comment this out if you don't want it to be visualized.
+    checkKeys2(car);
+    // car.applyForces();
+    
 }
 
 function drawAgent() {
@@ -67,15 +72,33 @@ function drawAgent() {
     background(0,20,0);
     track.display();
 
-    // Agents and stats:
-    displayCarInfo(1200,350, car.updateSensors(), 
+    // Agent and stats:
+    displayCarInfo(1180,380, car.updateSensors(), 
                             car.speed_net, reward);
+    displayAgentInfo(200,200, agent);
     car.display();
 }
+function displayAgentInfo(x,y, agent){
+    push();
+    fill('white');
+    textSize(20);
+    let currY = 0;
 
+    let spec = agent.spec;
+    for (const key in spec) {
+        if (spec.hasOwnProperty(key)) {
+            const val = spec[key];
+            text(key + ':\t\t' + str(val), x, y + currY);
+            currY += 25;
+        }
+    }
+    pop();
+}
 function displayCarInfo(x,y,distances,speed, reward){
     push();
     fill(0,255,0);
+    textSize(20);
+    const spacing = 50;
     // Front 7 sensors:
     for (let i = 0; i < 7; i++) {
         const dist = Math.round(distances[i]*10)/10;
@@ -91,7 +114,7 @@ function displayCarInfo(x,y,distances,speed, reward){
         text(dist, x - 100*cos((i-3)*20), y - i*30);
     }
     // Back three sensors:
-    for (let i = distances.length-1; i >= 7; i--) {
+    for (let i = 7; i <= 10; i++) {
         const dist = Math.round(distances[i]*10)/10;
         if (dist < 10){
             fill('white');
@@ -102,7 +125,7 @@ function displayCarInfo(x,y,distances,speed, reward){
         } else{
             fill(0,255,0);
         }
-        text(dist, x + 100*cos((i-8)*50), y - (i-7)*90);
+        text(dist, x + 100*cos((i-8.5)*40), y - (abs(i-10))*60);
     }
 
     // Car speed:
@@ -151,4 +174,20 @@ function checkKeys2(car){
 document.getElementById("save_agent").onclick = function (){
     console.log('Saving current agent...');
     agent.saveAgent();
+}
+
+document.getElementById("update_epsilon").onclick = function (){
+    console.log('Updating epsilon...');
+
+    const inputEpsilon = document.getElementById("epsilon_input").value;
+    console.log(float(inputEpsilon));
+
+    const prevEnv = agent.env;
+    let newSpec = agent.spec;
+    newSpec.epsilon = float(inputEpsilon);
+    let prevNetwork = agent.brain.toJSON();
+    
+    agent.brain = new RL.DQNAgent(prevEnv, newSpec);
+    agent.brain.fromJSON(prevNetwork);
+    
 }

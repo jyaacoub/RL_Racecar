@@ -1,7 +1,11 @@
 class Agent {
     constructor(env, spec, type){
+        this.env = env;
+        this.spec = spec;
+        this.type = type;
+
         if (type === 'rl'){
-            this.network = new RL.DQNAgent(env, spec);
+            this.brain = new RL.DQNAgent(env, spec);
         }
     }
     getFilePath(fileName){
@@ -17,7 +21,7 @@ class Agent {
     saveAgent(fileName){
         const filePath = this.getFilePath(fileName);
         console.log(filePath);
-        const content = JSON.stringify(this.network.toJSON());
+        const content = JSON.stringify(this.brain.toJSON());
 
         // In order to save the JSON into a text file we must first create a
         // temp element to hold the data so that we can send it to the server
@@ -33,13 +37,12 @@ class Agent {
     loadAgent(fileName){
         // Gets the JSON file for this particular agent
         const filePath = this.getFilePath(fileName);
-        let network = this.network;
         console.log('Loading from json:', filePath);
+        let brain = this.brain;
 
         $.getJSON(filePath, function(data){
             console.log('Success');
-            network.fromJSON(data);
-            console.log(network);
+            brain.fromJSON(data);
         }).fail(function(){
             console.log('Failed');
         });
@@ -49,14 +52,14 @@ class Agent {
 class RL_controller_env {
     constructor(car){
         this.car = car;
+
         // RL stuff:
-        this.brain = null;  // Set externally
         this.reward = 0.0;
 
         this.num_actions = 5;   // l,r,f,b and nothing
         this.action = 0;    //  Output on the world
 
-        this.num_states = this.car.sensors.length + 1; // includes speed
+        this.num_states = this.car.sensors.length + 1; // +1 for the speed
     }
     getNumStates(){
         return this.num_states;
@@ -68,9 +71,9 @@ class RL_controller_env {
         // Returns the value from each sensor and the current speed.
         let s = [];
         for (let i = 0; i < this.num_states-1; i++) {
-            s.push(this.car.sensors[i].distance);            
+            s.push(int(this.car.sensors[i].distance));            
         }
-        s.push(this.car.speed_net);
+        s.push(int(this.car.speed_net));
 
         return s;
     }
@@ -91,31 +94,28 @@ class RL_controller_env {
         if (this.car.collision()){
             r -= 5.0;
             this.car.resetPos();
+
+        } else{
+            for (let i = 0; i < state.length-1; i++) {
+                const value = state[i];
+                let normal = (value)/this.car.sens_mag; // normalizing the distance value.
+                r += normal*3 - 1.0;
+            }
+
+            // normalizing current speed val.
+            r += (state[state.length-1]/this.car.speed_terminal)*2.0;
+            
+            // Return the current state and the reward for the action for this new state
+
+            // rewarding it for how far it can get from the starting point.
+            // let dist_checkpoint = this.car.pos_x - this.car.original_pos.x + 200;
+
+            // r -= dist_checkpoint/150;
+            
+            // if (dist_checkpoint === 0){
+            //     this.car.resetPos();
+            // }
         }
-        
-        // for (let i = 0; i < state.length-1; i++) {
-        //     const value = state[i];
-        //     let normal = (value)/this.car.sens_mag; // normalizing the distance value.
-        //     // if (i === 3){
-        //     //     r += normal*4 - 2.0; // the center sensor is worth more.
-        //     // } else {
-        //     //     r += normal*2 - 1.0;
-        //     // }
-        // }
-
-        // normalizing current speed val.
-        r += (state[state.length-1]/this.car.speed_terminal)*5.0; 
-        
-        // Return the current state and the reward for the action for this new state
-
-        // rewarding it for how far it can get from the starting point.
-        // let dist_checkpoint = this.car.pos_x - this.car.original_pos.x + 200;
-
-        // r -= dist_checkpoint/150;
-        
-        // if (dist_checkpoint === 0){
-        //     this.car.resetPos();
-        // }
 
         let ns = state;
         let out = {'ns':ns, 'r':r};
