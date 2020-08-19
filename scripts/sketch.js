@@ -1,21 +1,27 @@
 const screenW = 1500;
 const screenH =  840;
 
-let FR = 10000;
+// let FR = 10000;
+// Drawing variables
 let drawing = false;
+let last_point;
+let prev_num_boundaries = 0;
+let first_boundary;
 
+// car and env:
 let car;
 let car_controller_env;
 let boundaries = [];    // Holds all the boundaries that the car can collide into.
 let reward = 0.0;
 
+// Agent stuff
 let spec = {};
 let agent;
 let action, state;
 
 function setup() {
-    createCanvas(screenW, screenH);
-    frameRate(FR);
+    createCanvas(windowWidth, windowHeight-document.getElementById('header').offsetHeight-4);
+    // frameRate(FR);
 
     angleMode(DEGREES);
     rectMode(CENTER); // From where rectangles are drawn from
@@ -58,23 +64,29 @@ function draw(){
     for (let i = 0; i < boundaries.length; i++) {
         boundaries[i].show();
     }
+    let distances = car.updateSensors();
+    displayStats(distances);
+    car.display();
 
     if (drawing){
-        console.log('drawing...');
+        if (last_point){
+            push();
+            stroke('red');
+            line(last_point.x, last_point.y, mouseX, mouseY);
+            if (boundaries.length > prev_num_boundaries + 1){
+                stroke('yellow');
+                line(last_point.x, last_point.y, boundaries[prev_num_boundaries].a.x, boundaries[prev_num_boundaries].a.y);
+                console.log(prev_num_boundaries);
+            }
+            pop();
+        }
     } else{
         if (frameCount % 1 === 0){ // Agent is getting information every n frames
             // learnAndAct();
         }
         
-        let distances = car.updateSensors();
-        displayStats(distances);
-        car.display();
         checkKeys2(car);
         car.applyForces();
-
-        for (let i = 0; i < car.colliders.length; i++) {
-            car.colliders[i].show();          
-        }
     }
 }
 
@@ -113,7 +125,6 @@ function displayCarInfo(x,y,distances,speed, reward){
     push();
     fill(0,255,0);
     textSize(20);
-    const spacing = 50;
     // Front 7 sensors:
     for (let i = 0; i < 7; i++) {
         const dist = Math.round(distances[i]*10)/10;
@@ -186,6 +197,15 @@ function checkKeys2(car){
     }
 }
 
+function mouseReleased(){
+    if (drawing){
+        if (last_point){
+            boundaries.push(new Boundary(last_point.x, last_point.y, mouseX, mouseY));
+        }
+        last_point = createVector(mouseX, mouseY);
+    }
+}
+
 document.getElementById("save_agent").onclick = function (){
     console.log('Saving current agent...');
     agent.saveAgent();
@@ -215,6 +235,25 @@ document.getElementById("toggle_draw").onclick = function (){
     } else{
         this.innerHTML = "Start Drawing";
         this.style = "background-color: green";
+
+        const num_boundaries = boundaries.length;
+        // If we add new boundaries delete the last one 
+        if (prev_num_boundaries !== num_boundaries){
+            boundaries.pop();
+
+            // Adding a final boundary to complete the track:
+            const first = boundaries[prev_num_boundaries].a;
+            const last = boundaries[num_boundaries-2].b;
+            boundaries.push(new Boundary(last.x, last.y, first.x, first.y));
+
+            prev_num_boundaries = num_boundaries;
+            last_point = undefined; // reseting for a new drawing.
+        }
     }
     
+}
+
+document.getElementById("save_map").onclick = function (){
+    console.log('saving map as json');
+    // TODO: this...
 }

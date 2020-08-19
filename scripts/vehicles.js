@@ -149,31 +149,39 @@ class Car {
         this.F_appE_y = 0;
     }
     collision(){
-        // TODO: Fix collision detection to work better
-        for (let i = 0; i < this.sensors.length; i++) {
-            const dist = this.sensors[i].distance;
-            if (dist <= 5.0){
-                return true;
+        const colliders = this.colliders;
+        for (let i = 0; i < colliders.length; i++) {
+            for (let j = 0; j < this.env_boundaries.length; j++) {
+                const boundary = this.env_boundaries[j];
+                if (colliders[i].collision(boundary)){
+                    return true;
+                }
             }
         }
         return false;
     }
     get colliders(){
         // Creating a square border box.
-        let boxSize = this.carSize*0.2;
+        const boxSize = this.carSize*0.2;
+        const h = boxSize*sqrt(2); // hypotenuse of the triangle made from the center point to a point of the box.
 
-        let left_x = this.pos_x - boxSize;
-        let right_x = this.pos_x + boxSize;
+        // To improve rendering:
+        const h_posCos = h*cos(45 + this.rotation);
+        const h_negCos = h*cos(45 - this.rotation);
+        const h_posSin = h*sin(45 + this.rotation);
+        const h_negSin = h*sin(45 - this.rotation);
 
-        let top_y = this.pos_y + boxSize;
-        let bottom_y = this.pos_y - boxSize;
+        const point_LT = createVector(this.pos_x - h_posCos, this.pos_y - h_posSin);
+        const point_RT = createVector(this.pos_x + h_negCos, this.pos_y - h_negSin);
+        const point_RB = createVector(this.pos_x + h_posCos, this.pos_y + h_posSin);
+        const point_LB = createVector(this.pos_x - h_negCos, this.pos_y + h_negSin);
 
         let colliders = [];
-        colliders.push(new Collider(left_x, bottom_y, left_x, top_y));
-        colliders.push(new Collider(left_x, top_y, right_x, top_y));
-        colliders.push(new Collider(right_x, top_y, right_x, bottom_y));
-        colliders.push(new Collider(right_x, bottom_y, left_x, bottom_y)); 
+        colliders.push(new Collider(point_LT.x, point_LT.y, point_RT.x, point_RT.y));
+        colliders.push(new Collider(point_RT.x, point_RT.y, point_RB.x, point_RB.y));
+        colliders.push(new Collider(point_RB.x, point_RB.y, point_LB.x, point_LB.y));
+        colliders.push(new Collider(point_LB.x, point_LB.y, point_LT.x, point_LT.y));
 
-        return colliders;// From this we cann call collider.collision(boundary) to determine if a collision occurs with a boundary
+        return colliders; // With this we can call collider.collision(boundary) to determine if a collision occurs with the car
     }
 }
