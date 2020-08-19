@@ -4,7 +4,7 @@ class Car {
         this.carSize = carSize || 40;
         this.mass = mass || 10000;
 
-        this.pos_x = pos_x || 750; // Chosen to be the center of the screen
+        this.pos_x = pos_x || 1100;
         this.pos_y = pos_y || 740;
         this.reset_pos = createVector(this.pos_x, this.pos_y);
 
@@ -148,11 +148,13 @@ class Car {
         this.F_appE_x = 0;
         this.F_appE_y = 0;
     }
-    collision(){
+    collision(lines){
         const colliders = this.colliders;
+        const boundaries = lines || this.env_boundaries;
+        
         for (let i = 0; i < colliders.length; i++) {
-            for (let j = 0; j < this.env_boundaries.length; j++) {
-                const boundary = this.env_boundaries[j];
+            for (let j = 0; j < boundaries.length; j++) {
+                const boundary = boundaries[j];
                 if (colliders[i].collision(boundary)){
                     return true;
                 }

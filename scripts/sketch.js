@@ -4,14 +4,21 @@ const screenH =  840;
 // let FR = 10000;
 // Drawing variables
 let drawing = false;
-let last_point;
+let mapMode = true;
+
+// boundaries (walls)
+let last_point_b;
 let prev_num_boundaries = 0;
-let first_boundary;
+let boundaries = [];    // Holds all the boundaries that the car can collide into.
+
+// checkpoints:
+let last_point_c;
+let curr_Checkpoint = 0; // The index pos of the current/next checkpoint.
+let checkpoints = [];   // Holds all the checkpoints that the car gains rewards for when passing.
 
 // car and env:
 let car;
 let car_controller_env;
-let boundaries = [];    // Holds all the boundaries that the car can collide into.
 let reward = 0.0;
 
 // Agent stuff
@@ -26,12 +33,8 @@ function setup() {
     angleMode(DEGREES);
     rectMode(CENTER); // From where rectangles are drawn from
 
-    origin = createVector(350, 230);
-
     car = new Car(0,0,30);
-
     car.env_boundaries = boundaries;
-
     car_controller_env = new RL_controller_env(car);
     initAgent();
 }
@@ -64,22 +67,19 @@ function draw(){
     for (let i = 0; i < boundaries.length; i++) {
         boundaries[i].show();
     }
+
+    // displaying checkpoints:
+    for (let i = 0; i < checkpoints.length; i++) {
+        checkpoints[i].show();
+    }
+    
     let distances = car.updateSensors();
     displayStats(distances);
     car.display();
 
     if (drawing){
-        if (last_point){
-            push();
-            stroke('red');
-            line(last_point.x, last_point.y, mouseX, mouseY);
-            if (boundaries.length > prev_num_boundaries + 1){
-                stroke('yellow');
-                line(last_point.x, last_point.y, boundaries[prev_num_boundaries].a.x, boundaries[prev_num_boundaries].a.y);
-                console.log(prev_num_boundaries);
-            }
-            pop();
-        }
+        drawEnvironment();
+
     } else{
         if (frameCount % 1 === 0){ // Agent is getting information every n frames
             // learnAndAct();
@@ -89,14 +89,36 @@ function draw(){
         car.applyForces();
     }
 }
-
+function drawEnvironment(){
+    if (mapMode){
+        if (last_point_b){
+            push();
+            stroke('red');
+            line(last_point_b.x, last_point_b.y, mouseX, mouseY);
+            if (boundaries.length > prev_num_boundaries + 1){
+                stroke('yellow');
+                line(last_point_b.x, last_point_b.y, boundaries[prev_num_boundaries].a.x, boundaries[prev_num_boundaries].a.y);
+                console.log(prev_num_boundaries);
+            }
+            pop();
+        }
+    }else{ // Checkpoint mode:
+        if (last_point_c){
+            push();
+            stroke('red');
+            strokeWeight(5);
+            line(last_point_c.x, last_point_c.y, mouseX, mouseY);
+            pop();
+        }
+    }
+}
 function learnAndAct(){
     state = car_controller_env.getState();
     action = agent.brain.act(state);
 
     // Executing the action and getting the reward value:
-    var obs = car_controller_env.sampleNextState(action);
-    agent.brain.learn(obs.r);
+    var obs = car_controller_env.sampleNextState(action, reward);
+    agent.brain.learn(obs.r); // TODO: calculate collision rewards externally
     reward = obs.r;
 }
 
@@ -197,12 +219,34 @@ function checkKeys2(car){
     }
 }
 
+function keyPressed(){
+    if (drawing){
+        if (keyIsDown(77)) { // 'M'
+            mapMode = true;
+        } 
+        if (keyIsDown(67)) { // 'C'
+            mapMode = false;
+        }
+    }
+}
+
 function mouseReleased(){
     if (drawing){
-        if (last_point){
-            boundaries.push(new Boundary(last_point.x, last_point.y, mouseX, mouseY));
+        if (mapMode){
+            if (last_point_b){
+                boundaries.push(new Boundary(last_point_b.x, last_point_b.y, mouseX, mouseY));
+            }
+            last_point_b = createVector(mouseX, mouseY);
+
+        } else { // adding checkpoints instead
+            if (last_point_c){
+                checkpoints.push(new Boundary(last_point_c.x, last_point_c.y, mouseX, mouseY, 'green', 5));
+                last_point_c = undefined;                
+            } else{
+                last_point_c = createVector(mouseX, mouseY);
+            }
+
         }
-        last_point = createVector(mouseX, mouseY);
     }
 }
 
@@ -246,9 +290,12 @@ document.getElementById("toggle_draw").onclick = function (){
             const last = boundaries[num_boundaries-2].b;
             boundaries.push(new Boundary(last.x, last.y, first.x, first.y));
 
-            prev_num_boundaries = num_boundaries;
-            last_point = undefined; // reseting for a new drawing.
         }
+
+        // reseting the values for the next drawing:
+        prev_num_boundaries = num_boundaries;
+        last_point_b = undefined;
+        last_point_c = undefined;
     }
     
 }
@@ -257,3 +304,5 @@ document.getElementById("save_map").onclick = function (){
     console.log('saving map as json');
     // TODO: this...
 }
+
+// TODO: add checkpoints for the vehicle to gain rewards as it goes around.

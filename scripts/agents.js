@@ -77,7 +77,7 @@ class RL_controller_env {
 
         return s;
     }
-    sampleNextState(a){
+    sampleNextState(a, r){ // the reward so far (r)
         // PERFORM ACTION:
         if (a === 0) this.car.move('l');
         if (a === 1) this.car.move('r');
@@ -90,7 +90,6 @@ class RL_controller_env {
         let state = this.getState();
         
         // APPLY REWARDS
-        let r = 0.0;
         if (this.car.collision()){
             r -= 5.0;
             this.car.resetPos();
