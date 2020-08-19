@@ -6,7 +6,7 @@ class Car {
 
         this.pos_x = pos_x || 750; // Chosen to be the center of the screen
         this.pos_y = pos_y || 740;
-        this.original_pos = createVector(this.pos_x, this.pos_y);
+        this.reset_pos = createVector(this.pos_x, this.pos_y);
 
         this.rotationSpeed = rotationSpeed || 2;
 
@@ -43,11 +43,6 @@ class Car {
         // Back sensors:
         for (let i = 120; i < 270; i += 40) {
             this.sensors.push(new SensorRay(this.pos_x,this.pos_y,this.sens_mag,i));
-        }
-
-        // Not displayed sensors:
-        for (let i = 100; i <= 260; i += 40){
-            this.sensors.push(new SensorRay(this.pos_x,this.pos_y,this.sens_mag,i,0,0,'lightBlue'));
         }
 
         this.env_boundaries = []; // Set externally
@@ -142,8 +137,8 @@ class Car {
     resetPos(){
         this.rotation = 0;
         // Position reset
-        this.pos_x = this.original_pos.x;
-        this.pos_y = this.original_pos.y;
+        this.pos_x = this.reset_pos.x;
+        this.pos_y = this.reset_pos.y;
         
         // Speed
         this.speed_x = 0;
@@ -154,6 +149,7 @@ class Car {
         this.F_appE_y = 0;
     }
     collision(){
+        // TODO: Fix collision detection to work better
         for (let i = 0; i < this.sensors.length; i++) {
             const dist = this.sensors[i].distance;
             if (dist <= 5.0){
@@ -161,5 +157,23 @@ class Car {
             }
         }
         return false;
+    }
+    get colliders(){
+        // Creating a square border box.
+        let boxSize = this.carSize*0.2;
+
+        let left_x = this.pos_x - boxSize;
+        let right_x = this.pos_x + boxSize;
+
+        let top_y = this.pos_y + boxSize;
+        let bottom_y = this.pos_y - boxSize;
+
+        let colliders = [];
+        colliders.push(new Collider(left_x, bottom_y, left_x, top_y));
+        colliders.push(new Collider(left_x, top_y, right_x, top_y));
+        colliders.push(new Collider(right_x, top_y, right_x, bottom_y));
+        colliders.push(new Collider(right_x, bottom_y, left_x, bottom_y)); 
+
+        return colliders;// From this we cann call collider.collision(boundary) to determine if a collision occurs with a boundary
     }
 }

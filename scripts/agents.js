@@ -71,7 +71,7 @@ class RL_controller_env {
         // Returns the value from each sensor and the current speed.
         let s = [];
         for (let i = 0; i < this.num_states-1; i++) {
-            s.push(int(this.car.sensors[i].distance));            
+            s.push(int(this.car.sensors[i].distance));  // this distance value is updated with car.updateSensors();          
         }
         s.push(int(this.car.speed_net));
 
@@ -96,27 +96,13 @@ class RL_controller_env {
             this.car.resetPos();
 
         } else{
-            for (let i = 0; i < state.length-1; i++) {
-                const value = state[i];
-                let normal = (value)/this.car.sens_mag; // normalizing the distance value.
-                r += normal*3 - 1.0;
-            }
-
             // normalizing current speed val.
             r += (state[state.length-1]/this.car.speed_terminal)*2.0;
-            
-            // Return the current state and the reward for the action for this new state
 
             // rewarding it for how far it can get from the starting point.
-            // let dist_checkpoint = this.car.pos_x - this.car.original_pos.x + 200;
-
-            // r -= dist_checkpoint/150;
-            
-            // if (dist_checkpoint === 0){
-            //     this.car.resetPos();
-            // }
         }
-
+            
+        // Return the current state and the reward for the action for this new state
         let ns = state;
         let out = {'ns':ns, 'r':r};
         return out;

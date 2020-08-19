@@ -2,10 +2,11 @@ const screenW = 1500;
 const screenH =  840;
 
 let FR = 10000;
+let drawing = false;
 
 let car;
 let car_controller_env;
-let track;
+let boundaries = [];    // Holds all the boundaries that the car can collide into.
 let reward = 0.0;
 
 let spec = {};
@@ -21,10 +22,9 @@ function setup() {
 
     origin = createVector(350, 230);
 
-    car = new Car();
-    track = new Track(screenH, screenW);
+    car = new Car(0,0,30);
 
-    car.env_boundaries = track.boundaries;
+    car.env_boundaries = boundaries;
 
     car_controller_env = new RL_controller_env(car);
     initAgent();
@@ -50,40 +50,55 @@ function initAgent(){
 
 // This function is called every frame (by P5.js):
 function draw(){
-    if (frameCount % 1 === 0){ // Agent is getting information every n frames
-        state = car_controller_env.getState();
-        action = agent.brain.act(state);
-
-        // Executing the action and getting the reward value:
-        var obs = car_controller_env.sampleNextState(action);
-        agent.brain.learn(obs.r);
-        reward = obs.r;
-    }
-
-    drawAgent(); // comment this out if you don't want it to be visualized.
-    checkKeys2(car);
-    // car.applyForces();
-    
-}
-
-function drawAgent() {
     clear();
     // Background:
     background(0,20,0);
-    track.display();
 
+    // displaying the track
+    for (let i = 0; i < boundaries.length; i++) {
+        boundaries[i].show();
+    }
+
+    if (drawing){
+        console.log('drawing...');
+    } else{
+        if (frameCount % 1 === 0){ // Agent is getting information every n frames
+            // learnAndAct();
+        }
+        
+        let distances = car.updateSensors();
+        displayStats(distances);
+        car.display();
+        checkKeys2(car);
+        car.applyForces();
+
+        for (let i = 0; i < car.colliders.length; i++) {
+            car.colliders[i].show();          
+        }
+    }
+}
+
+function learnAndAct(){
+    state = car_controller_env.getState();
+    action = agent.brain.act(state);
+
+    // Executing the action and getting the reward value:
+    var obs = car_controller_env.sampleNextState(action);
+    agent.brain.learn(obs.r);
+    reward = obs.r;
+}
+
+function displayStats(distances) {
     // Agent and stats:
-    displayCarInfo(1180,380, car.updateSensors(), 
-                            car.speed_net, reward);
+    displayCarInfo(1180,380, distances, car.speed_net, reward);
     displayAgentInfo(200,200, agent);
-    car.display();
 }
 function displayAgentInfo(x,y, agent){
+    // Displays information about the agent (spec.)
     push();
     fill('white');
     textSize(20);
     let currY = 0;
-
     let spec = agent.spec;
     for (const key in spec) {
         if (spec.hasOwnProperty(key)) {
@@ -189,5 +204,17 @@ document.getElementById("update_epsilon").onclick = function (){
     
     agent.brain = new RL.DQNAgent(prevEnv, newSpec);
     agent.brain.fromJSON(prevNetwork);
+    
+}
+document.getElementById("toggle_draw").onclick = function (){
+    console.log('draw togg');
+    drawing = !drawing;
+    if (drawing){
+        this.innerHTML = "Stop Drawing";
+        this.style = "background-color: red";
+    } else{
+        this.innerHTML = "Start Drawing";
+        this.style = "background-color: green";
+    }
     
 }
