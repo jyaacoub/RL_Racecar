@@ -6,15 +6,16 @@ const screenH =  840;
 let drawing = false;
 let mapMode = true;
 
+// holds all the boundaries and checkpoints and their variables.
+let map = new Map();
+
 // boundaries (walls)
 let last_point_b;
 let prev_num_boundaries = 0;
-let boundaries = [];    // Holds all the boundaries that the car can collide into.
 
 // checkpoints:
 let last_point_c;
 let curr_Checkpoint = 0; // The index pos of the current/next checkpoint.
-let checkpoints = [];   // Holds all the checkpoints that the car gains rewards for when passing.
 
 // car and env:
 let car;
@@ -28,13 +29,14 @@ let action, state;
 
 function setup() {
     createCanvas(windowWidth, windowHeight-document.getElementById('header').offsetHeight-4);
-    // frameRate(FR);
 
     angleMode(DEGREES);
     rectMode(CENTER); // From where rectangles are drawn from
 
+    map.loadMap('Map_2.json');
+
     car = new Car(0,0,30);
-    car.env_boundaries = boundaries;
+    car.map = map;
     car_controller_env = new RL_controller_env(car);
     initAgent();
 }
@@ -45,7 +47,7 @@ function setup() {
 function initAgent(){
     spec.update = 'qlearn'; // qlearn | sarsa
     spec.gamma = 0.9; // discount factor, [0, 1)
-    spec.epsilon = 0.5; // initial epsilon for epsilon-greedy policy, [0, 1)
+    spec.epsilon = 0.2; // initial epsilon for epsilon-greedy policy, [0, 1)
     spec.alpha = 0.005; // value function learning rate
     spec.experience_add_every = 5; // number of time steps before we add another experience to replay memory
     spec.experience_size = 1000; // size of experience replay memory
@@ -54,7 +56,7 @@ function initAgent(){
     spec.num_hidden_units = 100; // number of neurons in hidden layer
 
     agent = new Agent(car_controller_env, spec, 'rl');
-    // agent.loadAgent('trainedAgent.json');
+    agent.loadAgent('trainedAgentV2_2_2.json');
 }
 
 // This function is called every frame (by P5.js):
@@ -64,13 +66,18 @@ function draw(){
     background(0,20,0);
 
     // displaying the track
-    for (let i = 0; i < boundaries.length; i++) {
-        boundaries[i].show();
+    for (let i = 0; i < map.boundaries.length; i++) {
+        map.boundaries[i].show();
     }
 
     // displaying checkpoints:
-    for (let i = 0; i < checkpoints.length; i++) {
-        checkpoints[i].show();
+    for (let i = 0; i < map.checkpoints.length; i++) {
+        if (car.next_Checkpoint_i === i){ // TODO: figure out why the increment skips over some checkpoints
+            map.checkpoints[i].color = 'yellow';
+        } else {
+            map.checkpoints[i].color = 'green';
+        }
+        map.checkpoints[i].show();
     }
     
     let distances = car.updateSensors();
@@ -78,26 +85,28 @@ function draw(){
     car.display();
 
     if (drawing){
-        drawEnvironment();
-
+        drawingProgress();
     } else{
         if (frameCount % 1 === 0){ // Agent is getting information every n frames
-            // learnAndAct();
+            learnAndAct();
         }
         
         checkKeys2(car);
-        car.applyForces();
+        // car.applyForces();
+        // if (car.collision()){
+        //     car.resetPos();
+        // }
     }
 }
-function drawEnvironment(){
+function drawingProgress(){ // makes it easier to see what you have drawn so far.
     if (mapMode){
         if (last_point_b){
             push();
             stroke('red');
             line(last_point_b.x, last_point_b.y, mouseX, mouseY);
-            if (boundaries.length > prev_num_boundaries + 1){
+            if (map.boundaries.length > prev_num_boundaries + 1){
                 stroke('yellow');
-                line(last_point_b.x, last_point_b.y, boundaries[prev_num_boundaries].a.x, boundaries[prev_num_boundaries].a.y);
+                line(last_point_b.x, last_point_b.y, map.boundaries[prev_num_boundaries].a.x, map.boundaries[prev_num_boundaries].a.y);
                 console.log(prev_num_boundaries);
             }
             pop();
@@ -112,13 +121,14 @@ function drawEnvironment(){
         }
     }
 }
+
 function learnAndAct(){
     state = car_controller_env.getState();
     action = agent.brain.act(state);
 
     // Executing the action and getting the reward value:
-    var obs = car_controller_env.sampleNextState(action, reward);
-    agent.brain.learn(obs.r); // TODO: calculate collision rewards externally
+    var obs = car_controller_env.sampleNextState(action);
+    agent.brain.learn(obs.r); 
     reward = obs.r;
 }
 
@@ -127,6 +137,7 @@ function displayStats(distances) {
     displayCarInfo(1180,380, distances, car.speed_net, reward);
     displayAgentInfo(200,200, agent);
 }
+
 function displayAgentInfo(x,y, agent){
     // Displays information about the agent (spec.)
     push();
@@ -143,6 +154,7 @@ function displayAgentInfo(x,y, agent){
     }
     pop();
 }
+
 function displayCarInfo(x,y,distances,speed, reward){
     push();
     fill(0,255,0);
@@ -183,6 +195,99 @@ function displayCarInfo(x,y,distances,speed, reward){
     pop();
 }
 
+function keyPressed(){
+    if (drawing){
+        if (keyIsDown(77)) { // 'M'
+            mapMode = true;
+        } 
+        if (keyIsDown(67)) { // 'C'
+            mapMode = false;
+        }
+    } else {
+        // TODO: add key presses for user's vehicle here.
+    }
+}
+
+function mouseReleased(){
+    if (drawing){
+        if (mapMode){
+            if (last_point_b){
+                map.boundaries.push(new Boundary(last_point_b.x, last_point_b.y, mouseX, mouseY));
+            }
+            last_point_b = createVector(mouseX, mouseY);
+
+        } else { // adding checkpoints instead
+            if (last_point_c){
+                map.checkpoints.push(new Boundary(last_point_c.x, last_point_c.y, mouseX, mouseY, 'green', 5));
+                last_point_c = undefined;                
+            } else{
+                last_point_c = createVector(mouseX, mouseY);
+            }
+
+        }
+    }
+}
+
+document.getElementById("update_epsilon").onclick = function (){
+    console.log('Updating epsilon...');
+
+    const inputEpsilon = document.getElementById("epsilon_input").value;
+    console.log(float(inputEpsilon));
+
+    const prevEnv = agent.env;
+    let newSpec = agent.spec;
+    newSpec.epsilon = float(inputEpsilon);
+    let prevNetwork = agent.brain.toJSON();
+    
+    agent.brain = new RL.DQNAgent(prevEnv, newSpec);
+    agent.brain.fromJSON(prevNetwork);
+    
+}
+
+document.getElementById("toggle_draw").onclick = function (){
+    console.log('draw togg');
+    drawing = !drawing;
+    if (drawing){
+        this.innerHTML = "Stop Drawing";
+        this.style = "background-color: red";
+    } else{
+        this.innerHTML = "Start Drawing";
+        this.style = "background-color: lightgreen";
+
+        const num_boundaries = map.boundaries.length;
+        // If we add new boundaries delete the last one 
+        if (prev_num_boundaries !== num_boundaries){
+            map.boundaries.pop();
+
+            // Adding a final boundary to complete the track:
+            const first = map.boundaries[prev_num_boundaries].a;
+            const last = map.boundaries[num_boundaries-2].b;
+            map.boundaries.push(new Boundary(last.x, last.y, first.x, first.y));
+
+        }
+
+        // reseting the values for the next drawing:
+        prev_num_boundaries = num_boundaries;
+        last_point_b = undefined;
+        last_point_c = undefined;
+    }
+    
+}
+
+document.getElementById("save_agent").onclick = function (){
+    console.log('Saving current agent...');
+    agent.saveAgent();
+}
+
+document.getElementById("save_map").onclick = function (){
+    console.log('saving map as json'); // saves the map and its checkpoints as a json.
+
+    // Downloading that map json:
+    map.saveMap();
+
+}
+
+// TODO: add checkpoints for the vehicle to gain rewards as it goes around.
 function checkKeys1(car){
     // Turning
     if (keyIsDown(LEFT_ARROW)) {
@@ -218,91 +323,3 @@ function checkKeys2(car){
         car.move('b');
     }
 }
-
-function keyPressed(){
-    if (drawing){
-        if (keyIsDown(77)) { // 'M'
-            mapMode = true;
-        } 
-        if (keyIsDown(67)) { // 'C'
-            mapMode = false;
-        }
-    }
-}
-
-function mouseReleased(){
-    if (drawing){
-        if (mapMode){
-            if (last_point_b){
-                boundaries.push(new Boundary(last_point_b.x, last_point_b.y, mouseX, mouseY));
-            }
-            last_point_b = createVector(mouseX, mouseY);
-
-        } else { // adding checkpoints instead
-            if (last_point_c){
-                checkpoints.push(new Boundary(last_point_c.x, last_point_c.y, mouseX, mouseY, 'green', 5));
-                last_point_c = undefined;                
-            } else{
-                last_point_c = createVector(mouseX, mouseY);
-            }
-
-        }
-    }
-}
-
-document.getElementById("save_agent").onclick = function (){
-    console.log('Saving current agent...');
-    agent.saveAgent();
-}
-
-document.getElementById("update_epsilon").onclick = function (){
-    console.log('Updating epsilon...');
-
-    const inputEpsilon = document.getElementById("epsilon_input").value;
-    console.log(float(inputEpsilon));
-
-    const prevEnv = agent.env;
-    let newSpec = agent.spec;
-    newSpec.epsilon = float(inputEpsilon);
-    let prevNetwork = agent.brain.toJSON();
-    
-    agent.brain = new RL.DQNAgent(prevEnv, newSpec);
-    agent.brain.fromJSON(prevNetwork);
-    
-}
-document.getElementById("toggle_draw").onclick = function (){
-    console.log('draw togg');
-    drawing = !drawing;
-    if (drawing){
-        this.innerHTML = "Stop Drawing";
-        this.style = "background-color: red";
-    } else{
-        this.innerHTML = "Start Drawing";
-        this.style = "background-color: green";
-
-        const num_boundaries = boundaries.length;
-        // If we add new boundaries delete the last one 
-        if (prev_num_boundaries !== num_boundaries){
-            boundaries.pop();
-
-            // Adding a final boundary to complete the track:
-            const first = boundaries[prev_num_boundaries].a;
-            const last = boundaries[num_boundaries-2].b;
-            boundaries.push(new Boundary(last.x, last.y, first.x, first.y));
-
-        }
-
-        // reseting the values for the next drawing:
-        prev_num_boundaries = num_boundaries;
-        last_point_b = undefined;
-        last_point_c = undefined;
-    }
-    
-}
-
-document.getElementById("save_map").onclick = function (){
-    console.log('saving map as json');
-    // TODO: this...
-}
-
-// TODO: add checkpoints for the vehicle to gain rewards as it goes around.

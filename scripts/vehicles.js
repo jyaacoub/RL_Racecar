@@ -4,7 +4,7 @@ class Car {
         this.carSize = carSize || 40;
         this.mass = mass || 10000;
 
-        this.pos_x = pos_x || 1100;
+        this.pos_x = pos_x || 300;
         this.pos_y = pos_y || 740;
         this.reset_pos = createVector(this.pos_x, this.pos_y);
 
@@ -45,7 +45,8 @@ class Car {
             this.sensors.push(new SensorRay(this.pos_x,this.pos_y,this.sens_mag,i));
         }
 
-        this.env_boundaries = []; // Set externally
+        this.map; // Set externally
+        this.next_Checkpoint_i = 4; // index of next checkpoint
     }
     displaySensors(){
         for (let j = 0; j < this.sensors.length; j++) {
@@ -60,7 +61,7 @@ class Car {
             let origin = createVector(this.pos_x, this.pos_y);
             
             sensor.changeDirection(this.rotation);
-            sensor.updateSensor(origin, this.env_boundaries);
+            sensor.updateSensor(origin, this.map.boundaries);
             distances.push(sensor.distance);
         }
         return distances;
@@ -147,15 +148,38 @@ class Car {
         // Forces
         this.F_appE_x = 0;
         this.F_appE_y = 0;
+
+        this.next_Checkpoint_i = 4;
+    }
+    checkpointReached(){
+        const colliders = this.colliders;
+        const next_checkpoint = this.map.checkpoints[this.next_Checkpoint_i];
+
+        if (next_checkpoint === undefined){
+            return false;
+        }
+
+        for (let i = 0; i < colliders.length; i++) {
+            const collider = colliders[i];
+            if (collider.collision(next_checkpoint)){
+                console.log('checkpoint REACHED');
+                this.next_Checkpoint_i += 1;
+                if (this.next_Checkpoint_i === this.map.checkpoints.length) this.next_Checkpoint_i = 0;
+                return true;
+            }
+        }
     }
     collision(lines){
         const colliders = this.colliders;
-        const boundaries = lines || this.env_boundaries;
-        
+        const boundaries = lines || this.map.boundaries;
+
         for (let i = 0; i < colliders.length; i++) {
+            const collider = colliders[i];
+
             for (let j = 0; j < boundaries.length; j++) {
                 const boundary = boundaries[j];
-                if (colliders[i].collision(boundary)){
+
+                if (collider.collision(boundary)){
                     return true;
                 }
             }

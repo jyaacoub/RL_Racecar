@@ -26,13 +26,13 @@ class Collider extends Boundary{
         */ 
         
         // Ray points:
-        const x1 = this.x1;
-        const y1 = this.y1;
-        const x2 = this.x2 + x1;
-        const y2 = this.y2 + y1;
+        const x1 = this.a.x;
+        const y1 = this.a.y;
+        const x2 = this.b.x;
+        const y2 = this.b.y;
 
         // Boundary points:
-        const x3 = boundary.a.x;
+        const x3 = boundary.a.x; // TODO: figure out why we get cannnot read property of undef here when calling checkpoint reached
         const y3 = boundary.a.y;
         const x4 = boundary.b.x;
         const y4 = boundary.b.y;
@@ -104,11 +104,6 @@ class Ray {
             let intersect_point = createVector(x3 + u*(x4-x3), y3 + u*(y4-y3));
             return intersect_point; 
         }
-        
-        // if ((0.0 <= t && t <= 1.0)){
-        //     let intersect_point = createVector(x1 + t*(x2-x1), y1 + t*(y2-y1));
-        //     return intersect_point; 
-        // }
     }
     show(){
         push();
