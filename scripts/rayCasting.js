@@ -32,7 +32,7 @@ class Collider extends Boundary{
         const y2 = this.b.y;
 
         // Boundary points:
-        const x3 = boundary.a.x; // TODO: figure out why we get cannnot read property of undef here when calling checkpoint reached
+        const x3 = boundary.a.x; 
         const y3 = boundary.a.y;
         const x4 = boundary.b.x;
         const y4 = boundary.b.y;

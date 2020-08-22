@@ -48,11 +48,6 @@ class Car {
         this.map; // Set externally
         this.next_Checkpoint_i = 4; // index of next checkpoint
     }
-    displaySensors(){
-        for (let j = 0; j < this.sensors.length; j++) {
-            this.sensors[j].show();
-        }
-    }
     updateSensors(){
         // updates the sensors and returns a list of their distances
         let distances = [];
@@ -65,6 +60,11 @@ class Car {
             distances.push(sensor.distance);
         }
         return distances;
+    }
+    displaySensors(){
+        for (let j = 0; j < this.sensors.length; j++) {
+            this.sensors[j].show();
+        }
     }
     display(){
         this.displaySensors();  

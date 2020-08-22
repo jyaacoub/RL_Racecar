@@ -49,8 +49,6 @@ class RL_controller_env {
         this.car = car;
 
         // RL stuff:
-        this.reward = 0.0;
-
         this.num_actions = 5;   // l,r,f,b and nothing
         this.action = 0;    //  Output on the world
 

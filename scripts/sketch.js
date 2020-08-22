@@ -48,15 +48,15 @@ function initAgent(){
     spec.update = 'qlearn'; // qlearn | sarsa
     spec.gamma = 0.9; // discount factor, [0, 1)
     spec.epsilon = 0.2; // initial epsilon for epsilon-greedy policy, [0, 1)
-    spec.alpha = 0.005; // value function learning rate
+    spec.alpha = 0.1; // value function learning rate
     spec.experience_add_every = 5; // number of time steps before we add another experience to replay memory
     spec.experience_size = 1000; // size of experience replay memory
     spec.learning_steps_per_iteration = 5;
     spec.tderror_clamp = 1.0; // for robustness
-    spec.num_hidden_units = 100; // number of neurons in hidden layer
+    spec.num_hidden_units = 500; // number of neurons in hidden layer
 
     agent = new Agent(car_controller_env, spec, 'rl');
-    agent.loadAgent('trainedAgentV2_2_2.json');
+    // agent.loadAgent('trainedAgentV2_2_2.json');
 }
 
 // This function is called every frame (by P5.js):
@@ -72,7 +72,7 @@ function draw(){
 
     // displaying checkpoints:
     for (let i = 0; i < map.checkpoints.length; i++) {
-        if (car.next_Checkpoint_i === i){ // TODO: figure out why the increment skips over some checkpoints
+        if (car.next_Checkpoint_i === i){
             map.checkpoints[i].color = 'yellow';
         } else {
             map.checkpoints[i].color = 'green';
@@ -81,7 +81,7 @@ function draw(){
     }
     
     let distances = car.updateSensors();
-    displayStats(distances);
+    displayStats(car_controller_env.getState());
     car.display();
 
     if (drawing){
@@ -127,15 +127,15 @@ function learnAndAct(){
     action = agent.brain.act(state);
 
     // Executing the action and getting the reward value:
-    var obs = car_controller_env.sampleNextState(action);
+    var obs = car_controller_env.sampleNextState(action);   // TODO: add punishment for when the car doesn't reach a checkpoint within a certain amount of frames.
     agent.brain.learn(obs.r); 
     reward = obs.r;
 }
 
-function displayStats(distances) {
+function displayStats(data) {
     // Agent and stats:
-    displayCarInfo(1180,380, distances, car.speed_net, reward);
-    displayAgentInfo(200,200, agent);
+    displayCarInfo(1180,400, data.slice(0,data.length-1), data[data.length-1], reward);
+    displayAgentInfo(200,250, agent);
 }
 
 function displayAgentInfo(x,y, agent){
@@ -159,9 +159,10 @@ function displayCarInfo(x,y,distances,speed, reward){
     push();
     fill(0,255,0);
     textSize(20);
+    const sigfig = 1000;
     // Front 7 sensors:
     for (let i = 0; i < 7; i++) {
-        const dist = Math.round(distances[i]*10)/10;
+        const dist = Math.round(distances[i]*sigfig)/sigfig;
         if (dist < 10){
             fill('white');
         } else if (dist < 30){
@@ -175,7 +176,7 @@ function displayCarInfo(x,y,distances,speed, reward){
     }
     // Back three sensors:
     for (let i = 7; i <= 10; i++) {
-        const dist = Math.round(distances[i]*10)/10;
+        const dist = Math.round(distances[i]*sigfig)/sigfig;
         if (dist < 10){
             fill('white');
         } else if (dist < 30){
@@ -190,7 +191,7 @@ function displayCarInfo(x,y,distances,speed, reward){
 
     // Car speed:
     fill('white');
-    text(Math.round(speed*10)/10, x+10, y-90);
+    text(Math.round(speed*sigfig)/sigfig, x+10, y-90);
     text(Math.round(reward*100)/100, x-200 , y-90);
     pop();
 }
@@ -287,7 +288,6 @@ document.getElementById("save_map").onclick = function (){
 
 }
 
-// TODO: add checkpoints for the vehicle to gain rewards as it goes around.
 function checkKeys1(car){
     // Turning
     if (keyIsDown(LEFT_ARROW)) {
