@@ -45,14 +45,21 @@ class Agent {
 }
 
 class RL_controller_env {
-    constructor(car){
+    constructor(car, king_moves=false){
         this.car = car;
 
         // RL stuff:
-        this.num_actions = 5;   // l,r,f,b and nothing
+        if (king_moves){
+            // using king moves:
+            this.actions = ['l', 'r', 'f', 'b', 'lf', 'lb', 'rf', 'rb']
+        } else{
+            this.actions = ['l','r','f','b','n']
+        }
+        this.num_actions = this.actions.length;   // l,r,f,b and nothing
         this.action = 0;    //  Output on the world
 
         this.num_states = this.car.sensors.length + 1; // +1 for the speed
+        this.precision = 10 // round continous readings to the 10th decimal place
     }
     getNumStates(){
         return this.num_states;
@@ -64,10 +71,13 @@ class RL_controller_env {
         // Returns the value from each sensor and the current speed.
         let s = [];
         for (let i = 0; i < this.num_states-1; i++) {
-            s.push(this.car.sensors[i].distance/ this.car.sens_mag);  // this distance value is updated with car.updateSensors();          
+            // dividing by the max distance possible so that it is betweeen 0.0 and 1.0:
+            var norm_dist = this.car.sensors[i].distance/ this.car.sens_mag;  // this distance value is updated with car.updateSensors();  
+            s.push(Math.round(norm_dist*this.precision)/this.precision) // rounding to 10th decimal place     
         }
-        s.push(this.car.speed_net/this.car.speed_terminal);
-
+        // dividing by max speed possible -> normalized to 0-1
+        var norm_speed = this.car.speed_net/this.car.speed_terminal;
+        s.push(Math.round(norm_speed*this.precision)/this.precision);
         return s;
     }
     sampleNextState(a){

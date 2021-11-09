@@ -36,17 +36,33 @@ class Car {
         this.sens_mag = 400;
 
         // These are what are displayed on the screen:
-        // Front sensors:
+        // Back sensors:
         for (let i = -60; i <= 60; i += 20) {
             this.sensors.push(new SensorRay(this.pos_x,this.pos_y,this.sens_mag,i));
         }
-        // Back sensors:
+        // Front sensors:
         for (let i = 120; i < 270; i += 40) {
             this.sensors.push(new SensorRay(this.pos_x,this.pos_y,this.sens_mag,i));
         }
 
         this.map; // Set externally
         this.next_Checkpoint_i = 4; // index of next checkpoint
+    }
+    stateLookAhead(direction, force){
+        // Will return the new sensor readings if these are applied
+        var rotation, F_appE_x, F_appE_y = this.move(direction, force, inplace=false);
+        var pos_x, pos_y = this.applyForces(F_appE_x, F_appE_y, inplace=false)
+        
+        // updates the sensors and returns a list of their distances
+        let distances = [];
+        for (let j = 0; j < this.sensors.length; j++) {
+            let sensor = this.sensors[j];
+            let origin = createVector(pos_x, pos_y);
+            
+            let distance = sensor.getDistance(rotation, origin, this.map.boundaries);
+            distances.push(distance);
+        }
+        return distances;
     }
     updateSensors(){
         // updates the sensors and returns a list of their distances
@@ -93,47 +109,78 @@ class Car {
         circle(-w*(44/100), -h/4, size/10);
         pop();    
     }
-    applyForces(){
+    applyForces(F_appE_x, F_appE_y, inplace=true){
+        // Stuff to return:
+        var speed_x = this.speed_x;
+        var speed_y = this.speed_y;
+        var speed_net = 0;
+        var pos_x = this.pos_x;
+        var pos_y = this.pos_y;
+
+        // using current forces if non supplied or null
+        F_appE_x = F_appE_x ?? this.F_appE_x;
+        F_appE_x = F_appE_y ?? this.F_appE_x;
+
         // Friction magnitudes
-        let F_friction_x = -this.speed_x * this.F_friction;
-        let F_friction_y = -this.speed_y * this.F_friction;
+        let F_friction_x = -speed_x * this.F_friction;
+        let F_friction_y = -speed_y * this.F_friction;
     
         // Calc. net force
-        let F_net_x = F_friction_x + this.F_appE_x;
-        let F_net_y = F_friction_y + this.F_appE_y;
+        let F_net_x = F_friction_x + F_appE_x;
+        let F_net_y = F_friction_y + F_appE_y;
     
         // Calc. acceleration by dividing net force by mass
         let accel_x = F_net_x / this.mass;
         let accel_y = F_net_y / this.mass;
     
         // Delta time is seconds per frame
-        this.speed_x += accel_x * this.delta_t;     // units are: pixels/second
-        this.speed_y += accel_y * this.delta_t;
-        this.speed_net = sqrt(this.speed_x**2 + this.speed_y**2);
-        
+        speed_x += accel_x * this.delta_t;     // units are: pixels/second
+        speed_y += accel_y * this.delta_t;
+        speed_net = sqrt(speed_x**2 + speed_y**2);
+
         // Applying mechanics formula
-        this.pos_x += this.speed_x * this.delta_t + 0.5 * accel_x * (this.delta_t**2);
-        this.pos_y += this.speed_y * this.delta_t + 0.5 * accel_y * (this.delta_t**2);
-        
-        // Reseting the forces for the next frame
-        this.F_appE_x = 0;
-        this.F_appE_y = 0;
+        pos_x += speed_x * this.delta_t + 0.5 * accel_x * (this.delta_t**2);
+        pos_y += speed_y * this.delta_t + 0.5 * accel_y * (this.delta_t**2);
+
+        if (inplace){
+            this.speed_x = speed_x
+            this.speed_y = speed_y
+            this.speed_net = speed_net
+            this.pos_x = pos_x
+            this.pos_y = pos_y
+            // Reseting the forces for the next frame
+            this.F_appE_x = 0;
+            this.F_appE_y = 0;
+        }
+
+        return speed_x, speed_y, speed_net, pos_x, pos_y
     }
-    move(direction){
+    move(direction, force, inplace=true){
+        var rotation = this.rotation;
+        var F_x = 0;
+        var F_y = 0;
         // Turning:
-        if (direction === 'l'){ // Left
-            this.rotation -= this.rotationSpeed;
-        } else if (direction === 'r'){ // Right
-            this.rotation += this.rotationSpeed;
+        if (direction === 'l') // Left
+            rotation -= this.rotationSpeed;
+        else if (direction === 'r') // Right
+            rotation += this.rotationSpeed;
 
         // Moving:
-        } else if (direction === 'f'){ // Forwards
-            this.F_appE_x = -this.F_appE * cos(this.rotation);
-            this.F_appE_y = -this.F_appE * sin(this.rotation);
-        } else if (direction === 'b'){ // Backwards
-            this.F_appE_x = this.F_appE * cos(this.rotation);
-            this.F_appE_y = this.F_appE * sin(this.rotation);
+        if (force === 'f'){ // Forwards
+            F_x = -this.F_appE * cos(this.rotation);
+            F_y = -this.F_appE * sin(this.rotation);
+        } else if (force === 'b'){ // Backwards
+            F_x = this.F_appE * cos(this.rotation);
+            F_y = this.F_appE * sin(this.rotation);
         }
+        
+        // Saving movement if inplace flag is set: 
+        if (inplace){
+            this.rotation = rotation
+            this.F_appE_x = F_x
+            this.F_appE_y = F_y
+        }
+        return rotation, F_x, F_y
     }
     resetPos(){
         this.rotation = 0;

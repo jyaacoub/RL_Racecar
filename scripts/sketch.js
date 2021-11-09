@@ -41,9 +41,6 @@ function setup() {
     initAgent();
 }
 
-// The exploration-exploitation dilemma is solved with epsilon that balances the two by chosing between them randomly.
-//      This is called an Epsilon-Greedy policy.
-//      The actual epsilon value refers to the probability of choosing to explore.
 function initAgent(){
     spec.update = 'qlearn'; // qlearn | sarsa
     spec.gamma = 0.9; // discount factor, [0, 1)

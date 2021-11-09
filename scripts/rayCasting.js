@@ -113,17 +113,24 @@ class Ray {
         line(0,0,this.x2, this.y2);
         pop();
     }
-    getDistanceToBoundary(boundaries){
+    getDistanceToBoundary(boundaries, x1, y1, x2, y2, inplace=true){
         let min_dist = this.magnitude;
         let x2_new;
         let y2_new;
+
+        // If inplace can also pass in x1 and y1:
+        x1 = x1 ?? this.x1;
+        y1 = y1 ?? this.y1;
+        x2 = x2 ?? this.x2;
+        y2 = y2 ?? this.y2;
+
         // Finding the closest boundary
         for (let i = 0; i < boundaries.length; i++) {
             let intersect_point = this.cast(boundaries[i]);
             if (intersect_point){
                 // The following (x, y) are relative to the ray's origin:
-                let x = intersect_point.x - this.x1;
-                let y = intersect_point.y - this.y1;
+                let x = intersect_point.x - x1;
+                let y = intersect_point.y - y1;
                 let p_dist = sqrt(x**2 + y**2);
 
                 if (p_dist <= min_dist){
@@ -134,14 +141,15 @@ class Ray {
             } 
         }
 
-        if (x2_new !== undefined){
-            this.x2 = x2_new;
-            this.y2 = y2_new;
+        if (inplace){
+            if (x2_new){ // if they intersect we update
+                this.x2 = x2_new;
+                this.y2 = y2_new;
+            }
+            this.distance = min_dist;
         }
-        this.distance = min_dist;
         return min_dist;
     }
-
 }
 
 class SensorRay extends Ray{
@@ -174,5 +182,18 @@ class SensorRay extends Ray{
         this.readjustMagnitude();
         this.getDistanceToBoundary(boundaries);
     }
+    getDistance(rotation, newOrigin, boundaries){
+        // returns the distance without updating internal values
+        // Getting new direction:
+        var dir = rotation + this.dir_origin;
 
+        // getting new positions:
+        var x1 = newOrigin.x;
+        var y1 = newOrigin.y;
+        var x2 = -this.magnitude*cos(this.dir);
+        var y2 = -this.magnitude*sin(this.dir);
+
+        // Getting new distance:
+        return getDistanceToBoundary(boundaries, x1, y1, false)
+    }
 }
