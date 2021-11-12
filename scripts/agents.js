@@ -45,53 +45,59 @@ class Agent {
 }
 
 class RL_controller_env {
-    constructor(car){
+    constructor(car, king_moves=false){
         this.car = car;
 
         // RL stuff:
-        this.num_actions = 5;   // l,r,f,b and nothing
+        if (king_moves){
+            // using king moves:
+            this.actions = ['l', 'r', 'f', 'b', 'lf', 'lb', 'rf', 'rb', 'n']
+        } else{
+            this.actions = [['l', ''],['r', ''],['', 'f'],['', '']]
+        }
+
+        this.num_actions = this.actions.length;   // l,r,f,b and nothing
         this.action = 0;    //  Output on the world
 
-        this.num_states = this.car.sensors.length + 1; // +1 for the speed
+        this.num_readings = this.car.sensors.length + 1; // +1 for the speed
+        this.precision = 10 // how much to round by
+        this.num_states = this.precision ** this.num_readings;
     }
     getNumStates(){
-        return this.num_states;
+        return this.num_readings;
     }
     getMaxNumActions(){
         return this.num_actions;
     }
     getState(){
-        // Returns the value from each sensor and the current speed.
+        // Returns the current value from each sensor and speed.
         let s = [];
-        for (let i = 0; i < this.num_states-1; i++) {
-            s.push(this.car.sensors[i].distance/ this.car.sens_mag);  // this distance value is updated with car.updateSensors();          
+        for (let i = 0; i < this.num_readings-1; i++) {
+            // dividing by the max distance possible so that it is betweeen 0.0 and 1.0:
+            var norm_dist = this.car.sensors[i].distance/ this.car.sens_mag;  // this distance value is updated with car.updateSensors();  
+            s.push(Math.round(norm_dist*this.precision)/this.precision) // rounding to 10th decimal place     
         }
-        s.push(this.car.speed_net/this.car.speed_terminal);
-
+        // dividing by max speed possible -> normalized to 0-1
+        var norm_speed = this.car.speed_net/this.car.speed_terminal;
+        s.push(Math.round(norm_speed*this.precision)/this.precision);
         return s;
     }
     sampleNextState(a){
         // PERFORM ACTION:
-        if (a === 0) this.car.move('l');
-        if (a === 1) this.car.move('r');
-        if (a === 2) this.car.move('f');
-        if (a === 3) this.car.move('b');
-        
+        this.car.move(this.actions[a]);
         this.car.applyForces();
 
         // All but the last number are distance values from sensors:
         let state = this.getState();
-        let r = 0.0
+        let r = -0.5
         // APPLY REWARDS
         if (this.car.collision()){
-            r -= 3.0;
+            r = -10.0;
             this.car.resetPos();
         } else{
-            // normalizing current speed val.
-            // r += (state[state.length-1]/this.car.speed_terminal)*5.0;
             if (this.car.checkpointReached()){
-                r += 1.0;
-                console.log(r);
+                r = 5.0;
+                console.log(r, state);
             }
         }
 

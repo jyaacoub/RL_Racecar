@@ -19,7 +19,7 @@ class Car {
 
         this.F_friction = this.K_friction * this.mass * this.gravity;
         
-        let engine_p = engine_power || 430; 
+        let engine_p = engine_power || 1000; 
         this.F_appE = engine_p * this.mass;
         this.F_appE_x = 0;
         this.F_appE_y = 0;
@@ -36,12 +36,12 @@ class Car {
         this.sens_mag = 400;
 
         // These are what are displayed on the screen:
-        // Front sensors:
-        for (let i = -60; i <= 60; i += 20) {
+        // 3 Front sensors:
+        for (let i = -45; i <= 45; i += 45) {
             this.sensors.push(new SensorRay(this.pos_x,this.pos_y,this.sens_mag,i));
         }
-        // Back sensors:
-        for (let i = 120; i < 270; i += 40) {
+        // 2 Back sensors:
+        for (let i = 150; i <= 210; i += 60) {
             this.sensors.push(new SensorRay(this.pos_x,this.pos_y,this.sens_mag,i));
         }
 
@@ -119,7 +119,9 @@ class Car {
         this.F_appE_x = 0;
         this.F_appE_y = 0;
     }
-    move(direction){
+    move(direction_force){
+        var direction = direction_force[0];
+        var force = direction_force[1];
         // Turning:
         if (direction === 'l'){ // Left
             this.rotation -= this.rotationSpeed;
@@ -127,10 +129,10 @@ class Car {
             this.rotation += this.rotationSpeed;
 
         // Moving:
-        } else if (direction === 'f'){ // Forwards
+        } if (force === 'f'){ // Forwards
             this.F_appE_x = -this.F_appE * cos(this.rotation);
             this.F_appE_y = -this.F_appE * sin(this.rotation);
-        } else if (direction === 'b'){ // Backwards
+        } else if (force === 'b'){ // Backwards
             this.F_appE_x = this.F_appE * cos(this.rotation);
             this.F_appE_y = this.F_appE * sin(this.rotation);
         }
@@ -151,7 +153,7 @@ class Car {
 
         this.next_Checkpoint_i = 4;
     }
-    checkpointReached(){
+    checkpointReached(update_checkpoint=true){
         const colliders = this.colliders;
         const next_checkpoint = this.map.checkpoints[this.next_Checkpoint_i];
 
@@ -163,8 +165,10 @@ class Car {
             const collider = colliders[i];
             if (collider.collision(next_checkpoint)){
                 console.log('checkpoint REACHED');
-                this.next_Checkpoint_i += 1;
-                if (this.next_Checkpoint_i === this.map.checkpoints.length) this.next_Checkpoint_i = 0;
+                if (update_checkpoint){
+                    this.next_Checkpoint_i += 1;
+                    if (this.next_Checkpoint_i === this.map.checkpoints.length) this.next_Checkpoint_i = 0;
+                }
                 return true;
             }
         }

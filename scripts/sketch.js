@@ -27,6 +27,10 @@ let spec = {};
 let agent;
 let action, state;
 
+// frame speed:
+var startDate = new Date();
+var DISPLAY_ON = true;
+
 function setup() {
     createCanvas(windowWidth, windowHeight-document.getElementById('header').offsetHeight-4);
 
@@ -34,10 +38,6 @@ function setup() {
     rectMode(CENTER); // From where rectangles are drawn from
 
     map.loadMap('Map_2.json');
-
-    car = new Car(0,0,30);
-    car.map = map;
-    car_controller_env = new RL_controller_env(car);
     initAgent();
 }
 
@@ -45,13 +45,17 @@ function setup() {
 //      This is called an Epsilon-Greedy policy.
 //      The actual epsilon value refers to the probability of choosing to explore.
 function initAgent(){
+    car = new Car(0,0,30);
+    car.map = map;
+    car_controller_env = new RL_controller_env(car);
+
     spec.update = 'qlearn'; // qlearn | sarsa
-    spec.gamma = 0.9; // discount factor, [0, 1)
-    spec.epsilon = 0.2; // initial epsilon for epsilon-greedy policy, [0, 1)
+    spec.gamma = 0.75; // discount factor, [0, 1)
+    spec.epsilon = 0.1; // initial epsilon for epsilon-greedy policy, [0, 1)
     spec.alpha = 0.1; // value function learning rate
-    spec.experience_add_every = 5; // number of time steps before we add another experience to replay memory
-    spec.experience_size = 1000; // size of experience replay memory
-    spec.learning_steps_per_iteration = 5;
+    spec.experience_add_every = 10; // number of time steps before we add another experience to replay memory
+    spec.experience_size = 5000; // size of experience replay memory
+    spec.learning_steps_per_iteration = 10; // how many steps to learn from when sampling experience from replay
     spec.tderror_clamp = 1.0; // for robustness
     spec.num_hidden_units = 500; // number of neurons in hidden layer
 
@@ -61,38 +65,39 @@ function initAgent(){
 
 // This function is called every frame (by P5.js):
 function draw(){
-    clear();
-    // Background:
-    background(0,20,0);
+    if (DISPLAY_ON){   
+        clear();
+        // Background:
+        background(0,20,0);
 
-    // displaying the track
-    for (let i = 0; i < map.boundaries.length; i++) {
-        map.boundaries[i].show();
-    }
-
-    // displaying checkpoints:
-    for (let i = 0; i < map.checkpoints.length; i++) {
-        if (car.next_Checkpoint_i === i){
-            map.checkpoints[i].color = 'yellow';
-        } else {
-            map.checkpoints[i].color = 'green';
+        // displaying the track
+        for (let i = 0; i < map.boundaries.length; i++) {
+            map.boundaries[i].show();
         }
-        map.checkpoints[i].show();
+
+        // displaying checkpoints:
+        for (let i = 0; i < map.checkpoints.length; i++) {
+            if (car.next_Checkpoint_i === i){
+                map.checkpoints[i].color = 'yellow';
+            } else {
+                map.checkpoints[i].color = 'green';
+            }
+            map.checkpoints[i].show();
+        }
+        
+        let distances = car.updateSensors();
+        displayStats(car_controller_env.getState());
+        car.display();
     }
     
-    let distances = car.updateSensors();
-    displayStats(car_controller_env.getState());
-    car.display();
+    learnAndAct(); // agent is getting information every frame
 
     if (drawing){
         drawingProgress();
     } else{
-        if (frameCount % 1 === 0){ // Agent is getting information every n frames
-            learnAndAct();
-        }
-        
-        checkKeys2(car);
+        // checkKeys1(car);
         // car.applyForces();
+        // car.checkpointReached();
         // if (car.collision()){
         //     car.resetPos();
         // }
@@ -127,14 +132,14 @@ function learnAndAct(){
     action = agent.brain.act(state);
 
     // Executing the action and getting the reward value:
-    var obs = car_controller_env.sampleNextState(action);   // TODO: add punishment for when the car doesn't reach a checkpoint within a certain amount of frames.
+    var obs = car_controller_env.sampleNextState(action);
     agent.brain.learn(obs.r); 
     reward = obs.r;
 }
 
 function displayStats(data) {
     // Agent and stats:
-    displayCarInfo(1180,400, data.slice(0,data.length-1), data[data.length-1], reward);
+    displayCarInfo(1150,400, data.slice(0,data.length-1), data[data.length-1]);
     displayAgentInfo(200,250, agent);
 }
 
@@ -155,44 +160,44 @@ function displayAgentInfo(x,y, agent){
     pop();
 }
 
-function displayCarInfo(x,y,distances,speed, reward){
+function displayCarInfo(x,y,distances,speed){
     push();
     fill(0,255,0);
     textSize(20);
     const sigfig = 1000;
-    // Front 7 sensors:
-    for (let i = 0; i < 7; i++) {
+    // Front 3 sensors:
+    for (let i = 0; i < 3; i++) {
         const dist = Math.round(distances[i]*sigfig)/sigfig;
-        if (dist < 10){
+        if (dist < 0.2){
             fill('white');
-        } else if (dist < 30){
+        } else if (dist < 0.4){
             fill(255,0,0);
-        } else if (dist < 60){
+        } else if (dist < 0.6){
             fill('yellow');
         } else{
             fill(0,255,0);
         }
-        text(dist, x - 100*cos((i-3)*20), y - i*30);
+        text(dist, x + 100*cos((i-3)*90), y - i*90);
     }
-    // Back three sensors:
-    for (let i = 7; i <= 10; i++) {
+
+    // Back 2 sensors:
+    for (let i = 3; i < 5; i++) {
         const dist = Math.round(distances[i]*sigfig)/sigfig;
-        if (dist < 10){
+        if (dist < 0.2){
             fill('white');
-        } else if (dist < 30){
-            fill(255,0,0);
-        } else if (dist < 60){
+        } else if (dist < 0.4){
+            fill(255,0,0); // red
+        } else if (dist < 0.6){
             fill('yellow');
         } else{
-            fill(0,255,0);
+            fill(0,255,0); // green
         }
-        text(dist, x + 100*cos((i-8.5)*40), y - (abs(i-10))*60);
+        text(dist, x + 100, y - (i-2.5)*90);
     }
 
     // Car speed:
     fill('white');
     text(Math.round(speed*sigfig)/sigfig, x+10, y-90);
-    text(Math.round(reward*100)/100, x-200 , y-90);
     pop();
 }
 
@@ -224,7 +229,6 @@ function mouseReleased(){
             } else{
                 last_point_c = createVector(mouseX, mouseY);
             }
-
         }
     }
 }
@@ -285,41 +289,29 @@ document.getElementById("save_map").onclick = function (){
 
     // Downloading that map json:
     map.saveMap();
+}
 
+document.getElementById("display_on_off").onclick = function(){
+    DISPLAY_ON = ! DISPLAY_ON;
 }
 
 function checkKeys1(car){
+    let direction = '';
+    let force = '';
     // Turning
     if (keyIsDown(LEFT_ARROW)) {
-        car.move('l');
+        direction = 'l';
     }
     if (keyIsDown(RIGHT_ARROW)) {
-        car.move('r');
+        direction = (direction) ? '' : 'r';
     }
 
     // Moving
     if (keyIsDown(UP_ARROW)) {
-        car.move('f');
+        force = 'f';
     }
     if (keyIsDown(DOWN_ARROW)) {
-        car.move('b');
+        force = (force) ? '' : 'b';
     }
-}
-
-function checkKeys2(car){
-    // Turning
-    if (keyIsDown(65)) { // 'A'
-        car.move('l');
-    }
-    if (keyIsDown(68)) { // 'D'
-        car.move('r');
-    }
-
-    // Moving
-    if (keyIsDown(87)) { // 'W'
-        car.move('f');
-    }
-    if (keyIsDown(83)) { // 'S'
-        car.move('b');
-    }
+    car.move(direction, force)
 }

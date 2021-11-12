@@ -13,14 +13,20 @@
     }
   </style>
   
-  <div id="header" style="min-height: 25px; padding: 5px;">
-    <div style="width: 50%; float: left;">
-      <button id="save_agent" type="button">Save Current Agent</button>
+  <div id="header" style="width: 100%; min-height: 25px; padding: 5px; 
+                        display: flex; justify-content: space-around;">
+    <button id="save_agent" type="button">Save Current Agent</button>
+
+    <div>
       <input id="epsilon_input"/>
       <button id="update_epsilon">Update Epsilon</button>
     </div>
 
-    <div style="width: 15%; float: right;">
+    <div>
+      <button id="display_on_off">Display ON/OFF</button>
+    </div>
+
+    <div>
       <button id='save_map'>Save Map</button>
       <button id="toggle_draw" style="background-color: lightgreen">Start Drawing</button>
     </div>
