@@ -53,13 +53,29 @@ function initAgent(){
     spec.gamma = 0.75; // discount factor, [0, 1)
     spec.epsilon = 0.1; // initial epsilon for epsilon-greedy policy, [0, 1)
     spec.alpha = 0.1; // value function learning rate
-    spec.experience_add_every = 10; // number of time steps before we add another experience to replay memory
-    spec.experience_size = 5000; // size of experience replay memory
-    spec.learning_steps_per_iteration = 10; // how many steps to learn from when sampling experience from replay
-    spec.tderror_clamp = 1.0; // for robustness
-    spec.num_hidden_units = 500; // number of neurons in hidden layer
 
-    agent = new Agent(car_controller_env, spec, 'rl');
+    // specs for normal Q-learning
+    spec.smooth_policy_update = false;
+    spec.beta = 0.01; // learning rate for policy, if smooth updates are on
+
+    // eligibility traces
+    spec.lambda = 4
+    spec.replacing_traces = true;
+
+    // optional optimistic initial values
+    spec.q_init_val = 0;
+    spec.planN = 0;
+
+    // specs for DQN
+    // spec.experience_add_every = 10; // number of time steps before we add another experience to replay memory
+    // spec.experience_size = 5000; // size of experience replay memory
+    // spec.learning_steps_per_iteration = 40; // how many steps to learn from when sampling experience from replay
+    // spec.tderror_clamp = 1.0; // for robustness
+    // spec.num_hidden_units = 500; // number of neurons in hidden layer
+
+    brain = new RL.TDAgent(car_controller_env, spec);
+
+    agent = new Agent(car_controller_env, spec, brain);
     // agent.loadAgent('trainedAgentV2_2_2.json');
 }
 
@@ -128,7 +144,7 @@ function drawingProgress(){ // makes it easier to see what you have drawn so far
 }
 
 function learnAndAct(){
-    state = car_controller_env.getState();
+    state = car_controller_env.getState(true); // true to return index value
     action = agent.brain.act(state);
 
     // Executing the action and getting the reward value:
@@ -313,5 +329,5 @@ function checkKeys1(car){
     if (keyIsDown(DOWN_ARROW)) {
         force = (force) ? '' : 'b';
     }
-    car.move(direction, force)
+    car.move(direction, force);
 }

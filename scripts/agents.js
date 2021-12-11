@@ -1,12 +1,9 @@
 class Agent {
-    constructor(env, spec, type){
+    constructor(env, spec, brain){
         this.env = env;
         this.spec = spec;
-        this.type = type;
 
-        if (type === 'rl'){
-            this.brain = new RL.DQNAgent(env, spec);
-        }
+        this.brain = brain; // the RL model to train
     }
     saveAgent(fileName){
         const content = JSON.stringify(this.brain.toJSON());
@@ -60,16 +57,21 @@ class RL_controller_env {
         this.action = 0;    //  Output on the world
 
         this.num_readings = this.car.sensors.length + 1; // +1 for the speed
-        this.precision = 10 // how much to round by
+        this.precision = 5 // how much to round by
         this.num_states = this.precision ** this.num_readings;
     }
+    allowedActions(){
+        // returns a list of index positions for each of the possible actions.
+        return [...Array(this.num_actions).keys()];
+    }
     getNumStates(){
-        return this.num_readings;
+        console.log(this.num_states)
+        return this.num_states;
     }
     getMaxNumActions(){
         return this.num_actions;
     }
-    getState(){
+    getState(return_index){
         // Returns the current value from each sensor and speed.
         let s = [];
         for (let i = 0; i < this.num_readings-1; i++) {
@@ -80,15 +82,78 @@ class RL_controller_env {
         // dividing by max speed possible -> normalized to 0-1
         var norm_speed = this.car.speed_net/this.car.speed_terminal;
         s.push(Math.round(norm_speed*this.precision)/this.precision);
+
+        // need to convert the state s -> a number in the list!
+        if (return_index){
+            // this is important in order to access the correct state-value during updates
+            // Using the precision we can map to the proper index value
+            // state values will be between 0 and 1
+            // to get an index from that we need to appropriately map a float to an index position
+            // e.g.: if precision is 10:
+            // 0 -> 0
+            // 0.1 -> 1
+            // 0.2 -> 2
+            // ...
+            // 0.9 -> 9
+            // 1.0 -> 10
+
+            // if precision is 5:
+            // 0 -> 0
+            // 0.2 -> 1
+            // 0.4 -> 2
+            // 0.6 -> 3
+            // 0.8 -> 4
+            // 1.0 -> 5
+
+            // we also need to combine this across multiple dimensions/readings:
+            // so if we have 2 readings (a,b):
+            //      [a + b] wont work.
+            // width = num_states
+            //      [width*a + b] does work
+            
+            // for 3 readings (a,b,c)
+            // width = num_states
+            // height/depth = num_actions (3)
+            //  [width*a + depth*b + c] doesn't work...
+            //  [width*(a*depth + b) + c] does!
+
+            // for 4 readings (a,b,c,d):
+            // shape = (dim_1, dim_2, dim_3, dim_4)
+            // flattened = (dim_1*dim_2*dim_3*dim_4)
+            //      [dim_1*(dim_2*(dim_3*a + b) + c) + d]
+
+
+            // for n readings (a,b,c,...,n)
+            // nD_shape = (dim_1, dim_2,...,dim_n)
+            // flattened_shape = dim_1*dim_2*...*dim_n
+            //      [dim_1*(dim_2* ... dim_n-1*(dim_n*a + b) + c) ... + n-1 ) + n]
+
+            // in this case the dimensions are the same for all states:
+            // e.g: if we had 4 dims with p = this.precision:
+            //      [p*(p*(p*a + b) + c) + d]
+            //      =[a*p^3 + b*p^2 + c*p + d]
+            //
+            // But we could just as well reverse this because order is irrelevent:
+            //      =[a + b*p + c*p^2 + d*p^3]
+
+            var index = 0;
+            for (let i = 0; i < s.length; i++){
+                var new_s = int(s[i]*this.precision); // need to do this before mapping
+                index += new_s*(this.precision**i)
+            }
+            return index;
+        }
+
         return s;
     }
     sampleNextState(a){
+        // console.log(this.car);
         // PERFORM ACTION:
-        this.car.move(this.actions[a]);
+        this.car.move(this.actions[a][0], this.actions[a][1]);
         this.car.applyForces();
 
         // All but the last number are distance values from sensors:
-        let state = this.getState();
+        let state = this.getState(true);
         let r = -0.5
         // APPLY REWARDS
         if (this.car.collision()){

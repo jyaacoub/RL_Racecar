@@ -93,35 +93,36 @@ class Car {
         circle(-w*(44/100), -h/4, size/10);
         pop();    
     }
-    applyForces(){
-        // Friction magnitudes
-        let F_friction_x = -this.speed_x * this.F_friction;
-        let F_friction_y = -this.speed_y * this.F_friction;
-    
-        // Calc. net force
-        let F_net_x = F_friction_x + this.F_appE_x;
-        let F_net_y = F_friction_y + this.F_appE_y;
-    
-        // Calc. acceleration by dividing net force by mass
-        let accel_x = F_net_x / this.mass;
-        let accel_y = F_net_y / this.mass;
-    
-        // Delta time is seconds per frame
-        this.speed_x += accel_x * this.delta_t;     // units are: pixels/second
-        this.speed_y += accel_y * this.delta_t;
-        this.speed_net = sqrt(this.speed_x**2 + this.speed_y**2);
+    applyForces(frame_skip){
+        var loop = (frame_skip) ? frame_skip: 0;
+
+        for (var x = 0; x <= loop; x++){ // hacky way to apply frame skipping
+            // Friction magnitudes
+            let F_friction_x = -this.speed_x * this.F_friction;
+            let F_friction_y = -this.speed_y * this.F_friction;
         
-        // Applying mechanics formula
-        this.pos_x += this.speed_x * this.delta_t + 0.5 * accel_x * (this.delta_t**2);
-        this.pos_y += this.speed_y * this.delta_t + 0.5 * accel_y * (this.delta_t**2);
+            // Calc. net force
+            let F_net_x = F_friction_x + this.F_appE_x;
+            let F_net_y = F_friction_y + this.F_appE_y;
         
-        // Reseting the forces for the next frame
-        this.F_appE_x = 0;
-        this.F_appE_y = 0;
+            // Calc. acceleration by dividing net force by mass
+            let accel_x = F_net_x / this.mass;
+            let accel_y = F_net_y / this.mass;
+        
+            // Delta time is seconds per frame
+            this.speed_x += accel_x * this.delta_t;     // units are: pixels/second
+            this.speed_y += accel_y * this.delta_t;
+            this.speed_net = sqrt(this.speed_x**2 + this.speed_y**2);
+            
+            // Applying mechanics formula
+            this.pos_x += this.speed_x * this.delta_t + 0.5 * accel_x * (this.delta_t**2);
+            this.pos_y += this.speed_y * this.delta_t + 0.5 * accel_y * (this.delta_t**2);
+            // Reseting the forces for the next frame
+            this.F_appE_x = 0;
+            this.F_appE_y = 0;
+        }
     }
-    move(direction_force){
-        var direction = direction_force[0];
-        var force = direction_force[1];
+    move(direction, force){
         // Turning:
         if (direction === 'l'){ // Left
             this.rotation -= this.rotationSpeed;
