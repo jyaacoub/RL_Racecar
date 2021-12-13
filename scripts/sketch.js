@@ -45,7 +45,7 @@ function setup() {
 //      This is called an Epsilon-Greedy policy.
 //      The actual epsilon value refers to the probability of choosing to explore.
 function initAgent(){
-    car = new Car(0,0,30);
+    car = new Car(900,0,30);
     car.map = map;
     car_controller_env = new RL_controller_env(car);
 
@@ -55,7 +55,7 @@ function initAgent(){
     spec.alpha = 0.1; // value function learning rate
 
     // specs for normal Q-learning
-    spec.smooth_policy_update = false;
+    spec.smooth_policy_update = true;
     spec.beta = 0.01; // learning rate for policy, if smooth updates are on
 
     // eligibility traces

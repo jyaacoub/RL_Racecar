@@ -50,14 +50,14 @@ class RL_controller_env {
             // using king moves:
             this.actions = ['l', 'r', 'f', 'b', 'lf', 'lb', 'rf', 'rb', 'n']
         } else{
-            this.actions = [['l', ''],['r', ''],['', 'f'],['', '']]
+            this.actions = [['l', ''],['r', ''],['', 'f'],['', 'b']]
         }
 
         this.num_actions = this.actions.length;   // l,r,f,b and nothing
         this.action = 0;    //  Output on the world
 
         this.num_readings = this.car.sensors.length + 1; // +1 for the speed
-        this.precision = 5 // how much to round by
+        this.precision = 4 // how much to round by
         this.num_states = this.precision ** this.num_readings;
     }
     allowedActions(){
@@ -162,7 +162,6 @@ class RL_controller_env {
         } else{
             if (this.car.checkpointReached()){
                 r = 5.0;
-                console.log(r, state);
             }
         }
 

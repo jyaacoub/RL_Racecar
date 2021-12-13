@@ -46,7 +46,7 @@ class Car {
         }
 
         this.map; // Set externally
-        this.next_Checkpoint_i = 4; // index of next checkpoint
+        this.next_Checkpoint_i = 0; // index of next checkpoint
     }
     updateSensors(){
         // updates the sensors and returns a list of their distances
@@ -152,7 +152,7 @@ class Car {
         this.F_appE_x = 0;
         this.F_appE_y = 0;
 
-        this.next_Checkpoint_i = 4;
+        this.next_Checkpoint_i = 0;
     }
     checkpointReached(update_checkpoint=true){
         const colliders = this.colliders;
