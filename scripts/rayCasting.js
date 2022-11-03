@@ -20,7 +20,7 @@ class Collider extends Boundary{
     collision(boundary){
         /* This determines if the ray intersects with the boundary
         *   If it does it returns the point at which it does.
-        *   If they don't intersect it returns undefined
+        *   If they don't intersect it returns undefined/ falsey value.
         * 
         *  Source: https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection 
         */ 
@@ -50,6 +50,7 @@ class Collider extends Boundary{
         return ((0.0 <= u && u <= 1.0) && (0.0 <= t && t <= 1.0)); // true if there is a intersection/collsion
     }
 }
+
 class Ray {
     constructor(x1, y1, magnitude, dir, x2, y2, color){
         this.x1 = x1;
@@ -113,7 +114,7 @@ class Ray {
         line(0,0,this.x2, this.y2);
         pop();
     }
-    getDistanceToBoundary(boundaries){
+    getDistanceToBoundary(boundaries){ // gets the distance to the closest boundary on the map
         let min_dist = this.magnitude;
         let x2_new;
         let y2_new;
@@ -141,7 +142,6 @@ class Ray {
         this.distance = min_dist;
         return min_dist;
     }
-
 }
 
 class SensorRay extends Ray{

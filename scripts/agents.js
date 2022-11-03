@@ -50,7 +50,7 @@ class RL_controller_env {
 
         // RL stuff:
         if (king_moves){
-            // using king moves:
+            // using "king" moves:
             this.actions = ['l', 'r', 'f', 'b', 'lf', 'lb', 'rf', 'rb', 'n']
         } else{
             this.actions = [['l', ''],['r', ''],['', 'f'],['', '']]
@@ -90,6 +90,7 @@ class RL_controller_env {
         // All but the last number are distance values from sensors:
         let state = this.getState();
         let r = -0.5
+
         // APPLY REWARDS
         if (this.car.collision()){
             r = -10.0;

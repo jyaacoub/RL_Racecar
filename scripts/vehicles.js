@@ -1,6 +1,6 @@
 class Car {
     constructor(pos_x, pos_y, carSize, mass, engine_power, rotationSpeed, 
-                K_friction, gravity, frameRate){
+                K_friction, gravity, frameRate, backSens=true, sens_mag=800){
         this.carSize = carSize || 40;
         this.mass = mass || 10000;
 
@@ -33,21 +33,27 @@ class Car {
         this.carBody = 'green';
 
         this.sensors = [];
-        this.sens_mag = 400;
+        this.sens_mag = sens_mag;
 
         // These are what are displayed on the screen:
         // 3 Front sensors:
         for (let i = -45; i <= 45; i += 45) {
             this.sensors.push(new SensorRay(this.pos_x,this.pos_y,this.sens_mag,i));
         }
-        // 2 Back sensors:
-        for (let i = 150; i <= 210; i += 60) {
-            this.sensors.push(new SensorRay(this.pos_x,this.pos_y,this.sens_mag,i));
+
+        if (backSens){
+            // 2 Back sensors:
+            for (let i = 150; i <= 210; i += 60) {
+                this.sensors.push(new SensorRay(this.pos_x,this.pos_y,this.sens_mag,i));
+            }
         }
 
         this.map; // Set externally
         this.next_Checkpoint_i = 4; // index of next checkpoint
+        this.checkpoint_count = 0; // number of checkpoints passed
     }
+
+    //DISPLAY FUNCTIONS:
     updateSensors(){
         // updates the sensors and returns a list of their distances
         let distances = [];
@@ -93,6 +99,8 @@ class Car {
         circle(-w*(44/100), -h/4, size/10);
         pop();    
     }
+
+    // PHYSICS FUNCTIONS:
     applyForces(){
         // Friction magnitudes
         let F_friction_x = -this.speed_x * this.F_friction;
@@ -118,6 +126,15 @@ class Car {
         // Reseting the forces for the next frame
         this.F_appE_x = 0;
         this.F_appE_y = 0;
+    }
+    moveTuple(tuple_move){ // tuple_move = [rotation, engine_power]
+        // Cap the engine power
+        let engine_power = Math.min(tuple_move[1], this.F_appE);
+
+        // applying rotation and forces
+        this.rotation += tuple_move[0] * this.rotationSpeed;
+        this.F_appE_x = engine_power * cos(this.rotation);
+        this.F_appE_y = engine_power * sin(this.rotation);
     }
     move(direction_force){
         var direction = direction_force[0];
@@ -153,7 +170,9 @@ class Car {
 
         this.next_Checkpoint_i = 4;
     }
-    checkpointReached(update_checkpoint=true){
+
+    // COLLISION FUNCTIONS:
+    checkpointReached(update_checkpoint=true){ // Checks if car has collided with next checkpoint
         const colliders = this.colliders;
         const next_checkpoint = this.map.checkpoints[this.next_Checkpoint_i];
 
@@ -165,15 +184,16 @@ class Car {
             const collider = colliders[i];
             if (collider.collision(next_checkpoint)){
                 console.log('checkpoint REACHED');
-                if (update_checkpoint){
+                this.checkpoint_count += 1;
+                if (update_checkpoint){ // If true, update the next checkpoint value to the next one
                     this.next_Checkpoint_i += 1;
-                    if (this.next_Checkpoint_i === this.map.checkpoints.length) this.next_Checkpoint_i = 0;
+                    if (this.next_Checkpoint_i === this.map.checkpoints.length) this.next_Checkpoint_i = 0; // If it's the last checkpoint, go back to the first one
                 }
                 return true;
             }
         }
     }
-    collision(lines){
+    collision(lines){ // Determines if there is a collision with the lines given
         const colliders = this.colliders;
         const boundaries = lines || this.map.boundaries;
 
@@ -190,7 +210,7 @@ class Car {
         }
         return false;
     }
-    get colliders(){
+    get colliders(){ // creates the border box around the car for collisions
         // Creating a square border box.
         const boxSize = this.carSize*0.2;
         const h = boxSize*sqrt(2); // hypotenuse of the triangle made from the center point to a point of the box.
